@@ -580,3 +580,7 @@ Animations for text changes in evil mode.
 * Checkout
 https://github.com/bmag/emacs-purpose
 
+
+
+
+new stuff
