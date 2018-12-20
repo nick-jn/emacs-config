@@ -1,0 +1,582 @@
+* Startup options
+#+BEGIN_SRC emacs-lisp :tangle yes
+;; (setq debug-on-error t)
+
+(add-to-list 'load-path "~/.emacs.d/various/")
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+;; (add-to-list 'package-archives
+;;             '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+(package-initialize)
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+(require 'use-package)
+(setq use-package-always-ensure t)
+(eval-when-compile
+  (require 'use-package))
+
+;; (toggle-frame-fullscreen)
+;; (toggle-frame-maximized)
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+(setq inhibit-startup-message t)
+(setq initial-scratch-message nil)
+(scroll-bar-mode 0)
+(tool-bar-mode 0)
+(fringe-mode 0)
+(add-hook 'after-init-hook 'ibuffer) ; show ibuffer after emacs starts
+(find-file "~/.emacs.d/myconfig/conf.org")    ; load conf.org
+#+END_SRC
+* Various options
+#+begin_src emacs-lisp :tangle yes
+(setq scroll-conservatively 101)           ; removes jumpiness when scrolling
+(setq display-time-default-load-average t) ; display load average in the modeline
+(setq-default indent-tabs-mode nil)        ; spaces instead of tabs
+(setq mode-require-final-newline t)        ; adds \n at the end of file
+(setq mouse-wheel-progressive-speed nil)   ; sane mouse wheel scrolling
+(setq scroll-margin 4)                     ; scroll before getting to the end of the screen
+(setq scroll-step 0)
+(fset 'yes-or-no-p 'y-or-n-p)              ; prompt y/n instead of yes/no
+(setq confirm-kill-emacs 'y-or-n-p)        ; confirmation on exit
+
+;; smaller #+begin_src font in org-mode
+(set-face-attribute 'org-meta-line nil :height 0.7 :slant 'normal)
+  ;; backups
+(setq backup-directory-alist `(("." . "~/.emacsbak")))
+(setq delete-old-versions t
+  kept-new-versions 6
+  kept-old-versions 2
+  version-control t)
+
+;; history length options
+(setq history-length 100)
+(put 'minibuffer-history 'history-length 50)
+(put 'evil-ex-history 'history-length 50)
+(put 'kill-ring 'history-length 25)
+#+END_SRC
+* Shell
+#+BEGIN_SRC emacs-lisp :tangle yes
+(defvar my-term-shell "/bin/bash")
+(defadvice ansi-term (before force-bash)
+  (interactive (list my-term-shell)))
+(ad-activate 'ansi-term)
+#+END_SRC
+* Line numbers
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq display-line-numbers-type 'relative)
+(setq display-line-numbers-grow-only t)
+(setq display-line-numbers-width-start 3)
+(global-display-line-numbers-mode)
+#+END_SRC
+* Word wrapping
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq fill-column 79)
+;; (require 'fill-column-indicator)
+;; (fci-mode 1)
+;; (global-visual-fill-column-mode 1)
+;; (global-visual-line-mode 1)
+(adaptive-wrap-prefix-mode 1)
+(toggle-word-wrap 1)
+#+END_SRC
+* Parens
+#+BEGIN_SRC emacs-lisp :tangle yes
+;; (setq electric-pair-preserve-balance nil) ; Auto-complete brackets, etc.
+;; (electric-pair-mode t)
+(show-paren-mode 1) ; highlight paired parens
+#+END_SRC
+* Cursor, hl-line
+#+BEGIN_SRC emacs-lisp :tangle yes
+(blink-cursor-mode 0)
+(global-hl-line-mode 1)
+(set-cursor-color "firebrick")
+(set-face-background 'hl-line "gainsboro")
+(set-face-foreground 'highlight nil)
+(setq size-indication-mode t)
+#+END_SRC
+* Modeline
+#+BEGIN_SRC emacs-lisp :tangle yes
+(display-time-mode 1)
+(setq display-time-24hr-format t)
+(setq column-number-mode t)
+;; colors
+(set-face-foreground 'mode-line "white smoke")
+(set-face-foreground 'mode-line-buffer-id "light sky blue")
+(set-face-background 'mode-line "midnight blue")
+
+(defun mode-line-fill (face reserve)
+  "Return empty space using FACE and leaving RESERVE space on the right."
+  (when
+    (and window-system (eq 'right (get-scroll-bar-mode)))
+    (setq reserve (- reserve 3)))
+  (propertize " "
+    'display
+    `((space :align-to (- (+ right right-fringe right-margin) ,reserve)))
+    'face "white smoke"))
+
+(setq-default mode-line-format
+  (list
+    ;; left align
+    " %m | " ;; mode name
+    (propertize "%b | " 'face 'bold) ;; current buffer
+    "%p of %I | " ;; size
+    "C:%02c" ;; current column
+    '(:eval (when (buffer-modified-p)
+     (concat " | "  (propertize "Mod"
+                    'face 'font-lock-warning-face
+                    'help-echo "Buffer has been modified"))))
+    '(:eval (when buffer-read-only
+     (concat " | "  (propertize "RO"
+                    'face 'font-lock-warning-face
+                    'help-echo "Buffer is read-only"))))
+
+    ;; right align
+    (mode-line-fill 'mode-line 6)
+    "%H%M "
+))
+#+END_SRC
+* Keyboard shortcuts
+#+BEGIN_SRC emacs-lisp :tangle yes
+(global-set-key (kbd "C-c e") (lambda() (interactive) (load-file user-init-file)))
+(global-set-key (kbd "<f5>")  'ansi-term)
+(global-set-key (kbd "C-c b") 'previous-buffer)
+(global-set-key (kbd "C-c n") 'next-buffer)
+(global-set-key (kbd "C-c v") 'set-variable)
+
+(global-set-key (kbd "<f1>")     'describe-key)
+(global-set-key (kbd "C-c <f1>") 'which-key-show-major-mode)
+(global-set-key (kbd "<f2>")     'other-window)
+(global-set-key (kbd "<f3>")     'delete-other-windows)
+(global-set-key (kbd "<f4>")     'delete-window)
+(global-set-key (kbd "<f6>") (lambda() (interactive) (find-file "~/.emacs")))
+
+(define-key key-translation-map (kbd "<print>") (kbd "ESC"))
+
+(global-set-key (kbd "C-c u") 'universal-argument)
+(global-set-key (kbd "C-;")   'comment-line)
+
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+
+(global-set-key (kbd "S-C-<left>")  'shrink-window-horizontally)
+(global-set-key (kbd "S-C-<right>") 'enlarge-window-horizontally)
+(global-set-key (kbd "S-C-<down>")  'shrink-window)
+(global-set-key (kbd "S-C-<up>")    'enlarge-window)
+#+END_SRC
+* C mode
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq c-default-style "java")
+#+END_SRC
+* ibuffer
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq ibuffer-saved-filter-groups
+  (quote (("default"
+    ("dired" (mode . dired-mode))
+    ("perl" (mode . cperl-mode))
+    ("helm" (mode . helm-mode))
+    ("planner" (or
+                (name . "^\\*Calendar\\*$")
+                (name . "^diary$")
+                (mode . muse-mode)))
+    ("emacs" (or
+                (name . "^\\*scratch\\*$")
+                (name . "^\\*.*?\\*$")
+                (name . "^\\*Messages\\*$")))
+    ("gnus" (or
+            (mode . message-mode)
+            (mode . bbdb-mode)
+            (mode . mail-mode)
+            (mode . gnus-group-mode)
+            (mode . gnus-summary-mode)
+            (mode . gnus-article-mode)
+            (name . "^\\.bbdb$")
+            (name . "^\\.newsrc-dribble")))))))
+
+;; display hydra when loading ibuffer
+(add-hook 'ibuffer-hook #'hydra-ibuffer-main/body)
+#+END_SRC
+* Winner mode 
+#+BEGIN_SRC emacs-lisp :tangle yes
+(winner-mode)
+#+END_SRC
+* =========================
+* Evil
+** Evil Leader
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq evil-want-keybinding nil) ; on update it said to load it before evil
+(use-package evil-leader
+  :config
+  (global-evil-leader-mode 1) ; has to be enabled *before* evil-mode loads
+  (evil-leader-mode 1)
+  (evil-leader/set-leader "<SPC>")
+  (evil-leader/set-key
+    "a" 'org-agenda
+    "b" 'ibuffer
+    "k" 'kill-buffer
+    "f" 'helm-find-files
+    "h" 'hydra-help/body
+    "p" 'popwin:close-popup-window
+    "[" 'winner-undo
+    "]" 'winner-redo
+    "n" 'hydra-navigation/body
+    "w" 'delete-window
+    "o" 'other-window
+    "a" 'align-regexp
+    "j" 'ace-jump-mode
+    "e" 'helm-flycheck
+    "g" 'google-this))
+#+END_SRC
+** Evil
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package evil
+  :init
+  (setq evil-want-integration t)
+  :config
+  (evil-mode 1)
+  (when (require 'evil-collection nil t)
+    (evil-collection-init))
+  ;; Set emacs mode for these buffers:
+  (evil-set-initial-state 'eshell-mode 'emacs)
+  (evil-set-initial-state 'term-mode 'emacs)
+  (evil-set-initial-state 'ansi-term-mode 'emacs)
+  (evil-set-initial-state 'custom-mode 'emacs)
+  (setq evil-respect-visual-line-mode t)
+  (define-key evil-normal-state-map "U" 'undo-tree-redo)
+  (define-key evil-normal-state-map "\C-u" 'evil-scroll-up) ; C-u scrolls up now
+  ;; Make evil-mode up/down operate in screen lines instead of logical line
+  (define-key evil-motion-state-map "j" 'evil-next-visual-line)
+  (define-key evil-motion-state-map "k" 'evil-previous-visual-line)
+  ;; Also in visual mode
+  (define-key evil-visual-state-map "j" 'evil-next-visual-line)
+  (define-key evil-visual-state-map "k" 'evil-previous-visual-line))
+;; center screen while searching
+(defadvice evil-search-next
+  (after advice-for-evil-search-next activate)
+  (evil-scroll-line-to-center (line-number-at-pos)))
+(defadvice evil-search-previous
+  (after advice-for-evil-search-previous activate)
+  (evil-scroll-line-to-center (line-number-at-pos)))
+#+END_SRC
+** Evil Surround
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
+#+END_SRC
+** Evil Commentary
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package evil-commentary
+  :config
+  (evil-commentary-mode))
+#+END_SRC
+** Evil Nerd Commenter #DISABLED
+#+BEGIN_SRC emacs-lisp :tangle yes
+;; (use-package evil-nerd-commenter
+;;   :config
+;;   (require 'evil-nerd-commenter)
+;;   (evilnc-default-hotkeys))
+#+END_SRC
+** Evil Goggles
+Animations for text changes in evil mode.
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package evil-goggles
+  :init
+  (setq evil-goggles-duration 0.200) ; default is 0.200
+  :config
+  (evil-goggles-mode)) 
+#+END_SRC
+* Hydra
+** Hydra
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package hydra)
+#+END_SRC
+** Navigation
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (defhydra hydra-navigation ()
+    "navigation"
+    ("j" evil-scroll-down "down")
+    ("k" evil-scroll-up "up")
+    ("SPC" nil "exit"))
+#+END_SRC
+** Windows
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (defhydra hydra-windows ()
+    "windows"
+    ("w" winner-undo "del" :exit t)
+    ("o" other-window "other" :exit t))
+#+END_SRC
+** Help
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (defhydra hydra-help ()
+    "help"
+    ("e" helm-info-emacs "helm-info-emacs" :exit t)
+    ("h" helpful-at-point "helpful-at-point" :exit t)
+    ("b" helm-descbinds "helm-descbinds" :exit t)
+    ("m" helm-describe-modes "helm-describe-modes" :exit t)
+    ("v" describe-variable "describe variable" :exit t))
+#+END_SRC
+** ibuffer
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (defhydra hydra-ibuffer-main (:color pink :hint nil)
+    "
+   ^Navigation^ | ^Mark^        | ^Actions^        | ^View^
+  -^----------^-+-^----^--------+-^-------^--------+-^----^-------
+    _k_:    ʌ   | _m_: mark     | _D_: delete      | _g_: refresh
+   _RET_: visit | _u_: unmark   | _S_: save        | _s_: sort
+    _j_:    v   | _*_: specific | _a_: all actions | _/_: filter
+  -^----------^-+-^----^--------+-^-------^--------+-^----^-------
+  "
+    ("j" ibuffer-forward-line)
+    ("RET" ibuffer-visit-buffer :color blue)
+    ("k" ibuffer-backward-line)
+    ("m" ibuffer-mark-forward)
+    ("u" ibuffer-unmark-forward)
+    ("*" hydra-ibuffer-mark/body :color blue)
+    ("D" ibuffer-do-delete)
+    ("S" ibuffer-do-save)
+    ("a" hydra-ibuffer-action/body :color blue)
+    ("g" ibuffer-update)
+    ("s" hydra-ibuffer-sort/body :color blue)
+    ("/" hydra-ibuffer-filter/body :color blue)
+    ("o" ibuffer-visit-buffer-other-window "other window" :color blue)
+    ("q" quit-window "quit ibuffer" :color blue)
+    ("." nil "toggle hydra" :color blue))
+  
+  (defhydra hydra-ibuffer-mark (:color teal :columns 5
+                                :after-exit (hydra-ibuffer-main/body))
+    "Mark"
+    ("*" ibuffer-unmark-all "unmark all")
+    ("M" ibuffer-mark-by-mode "mode")
+    ("m" ibuffer-mark-modified-buffers "modified")
+    ("u" ibuffer-mark-unsaved-buffers "unsaved")
+    ("s" ibuffer-mark-special-buffers "special")
+    ("r" ibuffer-mark-read-only-buffers "read-only")
+    ("/" ibuffer-mark-dired-buffers "dired")
+    ("e" ibuffer-mark-dissociated-buffers "dissociated")
+    ("h" ibuffer-mark-help-buffers "help")
+    ("z" ibuffer-mark-compressed-file-buffers "compressed")
+    ("b" hydra-ibuffer-main/body "back" :color blue))
+  
+  (defhydra hydra-ibuffer-action (:color teal :columns 4
+                                  :after-exit
+                                  (if (eq major-mode 'ibuffer-mode)
+                                      (hydra-ibuffer-main/body)))
+    "Action"
+    ("A" ibuffer-do-view "view")
+    ("E" ibuffer-do-eval "eval")
+    ("F" ibuffer-do-shell-command-file "shell-command-file")
+    ("I" ibuffer-do-query-replace-regexp "query-replace-regexp")
+    ("H" ibuffer-do-view-other-frame "view-other-frame")
+    ("N" ibuffer-do-shell-command-pipe-replace "shell-cmd-pipe-replace")
+    ("M" ibuffer-do-toggle-modified "toggle-modified")
+    ("O" ibuffer-do-occur "occur")
+    ("P" ibuffer-do-print "print")
+    ("Q" ibuffer-do-query-replace "query-replace")
+    ("R" ibuffer-do-rename-uniquely "rename-uniquely")
+    ("T" ibuffer-do-toggle-read-only "toggle-read-only")
+    ("U" ibuffer-do-replace-regexp "replace-regexp")
+    ("V" ibuffer-do-revert "revert")
+    ("W" ibuffer-do-view-and-eval "view-and-eval")
+    ("X" ibuffer-do-shell-command-pipe "shell-command-pipe")
+    ("b" nil "back"))
+  
+  (defhydra hydra-ibuffer-sort (:color amaranth :columns 3)
+    "Sort"
+    ("i" ibuffer-invert-sorting "invert")
+    ("a" ibuffer-do-sort-by-alphabetic "alphabetic")
+    ("v" ibuffer-do-sort-by-recency "recently used")
+    ("s" ibuffer-do-sort-by-size "size")
+    ("f" ibuffer-do-sort-by-filename/process "filename")
+    ("m" ibuffer-do-sort-by-major-mode "mode")
+    ("b" hydra-ibuffer-main/body "back" :color blue))
+  
+  (defhydra hydra-ibuffer-filter (:color amaranth :columns 4)
+    "Filter"
+    ("m" ibuffer-filter-by-used-mode "mode")
+    ("M" ibuffer-filter-by-derived-mode "derived mode")
+    ("n" ibuffer-filter-by-name "name")
+    ("c" ibuffer-filter-by-content "content")
+    ("e" ibuffer-filter-by-predicate "predicate")
+    ("f" ibuffer-filter-by-filename "filename")
+    (">" ibuffer-filter-by-size-gt "size")
+    ("<" ibuffer-filter-by-size-lt "size")
+    ("/" ibuffer-filter-disable "disable")
+    ("b" hydra-ibuffer-main/body "back" :color blue))
+#+END_SRC
+* Which Key
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package which-key
+  :defer 1
+  :config (which-key-mode))
+(which-key-setup-side-window-right-bottom)
+(setq which-key-idle-delay 0.2)
+#+END_SRC
+* Company
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package company
+  :config
+  (add-hook 'after-init-hook 'global-company-mode)
+  (with-eval-after-load 'company
+    (add-hook 'c++-mode-hook 'company-mode)
+    (add-hook 'c-mode-hook 'company-mode)))
+
+(use-package company-c-headers
+  :ensure t)
+(setq company-backends (delete 'company-semantic company-backends))
+(add-to-list 'company-backends 'company-c-headers)
+#+END_SRC
+* Helm
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package helm
+  :config
+  (helm-mode)
+  (setq helm-mode-fuzzy-match t)
+  (global-set-key (kbd "M-x") 'helm-M-x)
+  (setq helm-autoresize-mode t))
+
+(use-package helm-descbinds
+  :config
+  (helm-descbinds-mode)
+  (global-set-key (kbd "C-x C-f") 'helm-find-files)
+  (global-set-key (kbd "C-h a") 'helm-apropos))
+
+;; helm-company
+(autoload 'helm-company "helm-company") ; not necessary if using ELPA package
+(eval-after-load 'company
+  '(progn
+     (define-key company-mode-map (kbd "C-:") 'helm-company)
+     (define-key company-active-map (kbd "C-:") 'helm-company)))
+(add-to-list 'company-backends 'company-math-symbols-unicode)
+#+END_SRC
+* Flycheck
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package flycheck
+  :config
+  (global-flycheck-mode)
+  (add-hook 'after-init-hook #'global-flycheck-mode)
+  (setq flycheck-pos-tip-mode t)
+  (with-eval-after-load 'flycheck
+    (flycheck-pos-tip-mode))) ; show tooltip when point is on the error
+#+END_SRC
+* YASnippet
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package yasnippet
+  :init
+  (add-to-list 'load-path "~/.emacs.d/plugins/yasnippet")
+  :config
+  (yas-global-mode 1))
+#+END_SRC
+* Magit
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package magit)
+#+END_SRC
+* =========================
+* Various packages
+** help-fns+
+ #+BEGIN_SRC emacs-lisp :tangle yes
+ (require 'help-fns+)
+ #+END_SRC
+** Olivetti
+ Centers the text in the window.
+ #+BEGIN_SRC emacs-lisp :tangle yes
+ (use-package olivetti
+   :config
+   (setq olivetti-body-width 120)
+   (global-set-key (kbd "C-c o") 'olivetti-mode))
+ #+END_SRC
+** Org bullets
+ #+BEGIN_SRC emacs-lisp :tangle yes
+ (use-package org-bullets
+   :config
+   (org-bullets-mode))
+ #+END_SRC
+** Smartparens
+ #+BEGIN_SRC emacs-lisp :tangle yes
+(use-package smartparens
+  :init
+  (require 'smartparens-config)
+  :config
+  (smartparens-global-mode))
+ #+END_SRC
+** Ace Jump Mode
+ #+BEGIN_SRC emacs-lisp :tangle yes
+ (use-package ace-jump-mode)
+ #+END_SRC
+** Try
+ #+BEGIN_SRC emacs-lisp :tangle yes
+ (use-package try)
+ #+END_SRC
+** Shackle 
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package shackle)
+(shackle-mode t)
+(setq helm-display-function 'pop-to-buffer)
+(setq shackle-rules
+      '(("*helm-ag*"              :select t   :align right :size 0.5)
+        ("*helm semantic/imenu*"  :select t   :align right :size 0.4)
+        ("*helm org inbuffer*"    :select t   :align right :size 0.4)
+        (flycheck-error-list-mode :select nil :align below :size 0.25)
+        (compilation-mode         :select nil :align below :size 0.25)
+        (messages-buffer-mode     :select t   :align below :size 0.25)
+        (inferior-emacs-lisp-mode :select t   :align below :size 0.25)
+        (ert-results-mode         :select t   :align below :size 0.5)
+        (calendar-mode            :select t   :align below :size 0.25)
+        (racer-help-mode          :select t   :align right :size 0.5)
+        (help-mode                :select t   :align below :size 0.5)
+        (helpful-mode             :select t   :align below :size 0.5)
+        ("*Warnings*"             :select t   :align below :size 0.5)
+        ("*Compile-Log*"          :select t   :align below :size 0.5)
+        (" *Deletions*"           :select t   :align below :size 0.25)
+        (" *Marked Files*"        :select t   :align below :size 0.25)
+        ("*Org Select*"           :select t   :align below :size 0.33)
+        ("*Org Note*"             :select t   :align below :size 0.33)
+        ("*Org Links*"            :select t   :align below :size 0.2)
+        (" *Org todo*"            :select t   :align below :size 0.2)
+        ("*Man.*"                 :select t   :align below :size 0.5  :regexp t)
+        ("*helm.*"                :select t   :align below :size 0.4 :regexp t)
+        ("*Org Src.*"             :select t   :align right :size 0.5  :regexp t)))
+#+END_SRC
+** Expand region
+ #+BEGIN_SRC emacs-lisp :tangle yes
+ (use-package expand-region
+   :config
+   (global-set-key (kbd "C-=") 'er/expand-region))
+ #+END_SRC
+** Man 
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package man)
+#+END_SRC
+** Pdf Tools
+ #+BEGIN_SRC emacs-lisp :tangle yes
+ (use-package pdf-tools
+   :config
+   (pdf-tools-install))
+ #+END_SRC
+** Google this
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package google-this)
+#+END_SRC
+** Popwin # DISABLED
+ #+BEGIN_SRC emacs-lisp :tangle yes
+;; (use-package popwin
+  ;; :config
+  ;; (popwin-mode 1)
+  ;; (global-set-key (kbd "C-c p") popwin:keymap))
+ #+END_SRC
+** Telephone line # DISABLED
+ #+BEGIN_SRC emacs-lisp :tangle yes
+ ;; (use-package telephone-line
+   ;; :init
+     ;; :config
+   ;; (telephone-line-mode))
+ #+END_SRC
+* Custom file
+
+* Custom
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq custom-file (concat user-emacs-directory "/myconfig/.custom.el"))
+(load custom-file 'noerror)
+(define-key key-translation-map (kbd "ESC") (kbd "C-g"))
+#+END_SRC
+* Checkout
+https://github.com/bmag/emacs-purpose
+
