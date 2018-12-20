@@ -222,7 +222,8 @@
     "a" 'align-regexp
     "j" 'ace-jump-mode
     "e" 'helm-flycheck
-    "g" 'google-this))
+    "g" 'google-this
+    "m" 'hydra-magit/body))
 #+END_SRC
 ** Evil
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -287,7 +288,9 @@ Animations for text changes in evil mode.
 * Hydra
 ** Hydra
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package hydra)
+(use-package hydra
+  :config
+  (setq hydra-is-helpful t))
 #+END_SRC
 ** Navigation
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -401,6 +404,32 @@ Animations for text changes in evil mode.
     ("<" ibuffer-filter-by-size-lt "size")
     ("/" ibuffer-filter-disable "disable")
     ("b" hydra-ibuffer-main/body "back" :color blue))
+#+END_SRC
+** Magit
+#+BEGIN_SRC emacs-lisp :tangle yes
+(defhydra hydra-magit (:color blue :columns 8)
+  "Magit"
+  ("s" magit-status "status")
+  ("c" magit-checkout "checkout")
+  ("m" magit-merge "merge")
+  ("l" magit-log "log")
+  ("!" magit-git-command "command")
+  ("$" magit-process "process")
+  ("g" hydra-git-gutter/body "git gutter"))
+#+END_SRC
+** Git gutter
+#+BEGIN_SRC emacs-lisp :tangle yes
+(defhydra hydra-git-gutter()
+  "git-gutter"
+  ("j" git-gutter:next-hunk)
+  ("k" git-gutter:previous-hunk)
+  ("SPC" nil "exit"))
+#+END_SRC
+* Git gutter
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package git-gutter
+  :init
+  (global-git-gutter-mode))
 #+END_SRC
 * Which Key
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -532,7 +561,7 @@ Animations for text changes in evil mode.
         ("*Org Links*"            :select t   :align below :size 0.2)
         (" *Org todo*"            :select t   :align below :size 0.2)
         ("*Man.*"                 :select t   :align below :size 0.5  :regexp t)
-        ("*helm.*"                :select t   :align below :size 0.4 :regexp t)
+        ("*helm.*"                :select t   :align below :size 0.45 :regexp t)
         ("*Org Src.*"             :select t   :align right :size 0.5  :regexp t)))
 #+END_SRC
 ** Expand region
@@ -554,6 +583,10 @@ Animations for text changes in evil mode.
 ** Google this
 #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package google-this)
+#+END_SRC
+** Discover my major
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package discover-my-major)
 #+END_SRC
 ** Popwin # DISABLED
  #+BEGIN_SRC emacs-lisp :tangle yes
@@ -581,6 +614,3 @@ Animations for text changes in evil mode.
 https://github.com/bmag/emacs-purpose
 
 
-
-
-new stuff
