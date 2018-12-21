@@ -25,7 +25,7 @@
 (tool-bar-mode 0)
 (fringe-mode 0)
 (add-hook 'after-init-hook 'ibuffer) ; show ibuffer after emacs starts
-(find-file "~/.emacs.d/myconfig/conf.org")    ; load conf.org
+;; (find-file "~/.emacs.d/myconfig/conf.org")    ; load conf.org
 #+END_SRC
 * Various options
 #+begin_src emacs-lisp :tangle yes
@@ -35,13 +35,15 @@
 (setq mode-require-final-newline t)        ; adds \n at the end of file
 (setq mouse-wheel-progressive-speed nil)   ; sane mouse wheel scrolling
 (setq scroll-margin 4)                     ; scroll before getting to the end of the screen
-(setq scroll-step 0)
+(setq scroll-step 1)
 (fset 'yes-or-no-p 'y-or-n-p)              ; prompt y/n instead of yes/no
 (setq confirm-kill-emacs 'y-or-n-p)        ; confirmation on exit
+;; (setq gc-cons-percentage 0.1)
 
 ;; smaller #+begin_src font in org-mode
 (set-face-attribute 'org-meta-line nil :height 0.7 :slant 'normal)
-  ;; backups
+
+;; backups
 (setq backup-directory-alist `(("." . "~/.emacsbak")))
 (setq delete-old-versions t
   kept-new-versions 6
@@ -98,7 +100,6 @@
 (display-time-mode 1)
 (setq display-time-24hr-format t)
 (setq column-number-mode t)
-;; colors
 (set-face-foreground 'mode-line "white smoke")
 (set-face-foreground 'mode-line-buffer-id "light sky blue")
 (set-face-background 'mode-line "midnight blue")
@@ -193,6 +194,10 @@
 ;; display hydra when loading ibuffer
 (add-hook 'ibuffer-hook #'hydra-ibuffer-main/body)
 #+END_SRC
+* Org
+#+BEGIN_SRC emacs-lisp :tangle yes
+(setq org-src-fontify-natively t)
+#+END_SRC
 * Winner mode 
 #+BEGIN_SRC emacs-lisp :tangle yes
 (winner-mode)
@@ -201,29 +206,30 @@
 * Evil
 ** Evil Leader
 #+BEGIN_SRC emacs-lisp :tangle yes
-(setq evil-want-keybinding nil) ; on update it said to load it before evil
-(use-package evil-leader
-  :config
-  (global-evil-leader-mode 1) ; has to be enabled *before* evil-mode loads
-  (evil-leader-mode 1)
-  (evil-leader/set-leader "<SPC>")
-  (evil-leader/set-key
-    "a" 'org-agenda
-    "b" 'ibuffer
-    "k" 'kill-buffer
-    "f" 'helm-find-files
-    "h" 'hydra-help/body
-    "p" 'popwin:close-popup-window
-    "[" 'winner-undo
-    "]" 'winner-redo
-    "n" 'hydra-navigation/body
-    "w" 'delete-window
-    "o" 'other-window
-    "a" 'align-regexp
-    "j" 'ace-jump-mode
-    "e" 'helm-flycheck
-    "g" 'google-this
-    "m" 'hydra-magit/body))
+  (setq evil-want-keybinding nil) ; on update it said to load it before evil
+  (use-package evil-leader
+    :config
+    (global-evil-leader-mode 1) ; has to be enabled *before* evil-mode loads
+    (evil-leader-mode 1)
+    (evil-leader/set-leader "<SPC>")
+    (evil-leader/set-key
+      "a" 'org-agenda
+      "b" 'ibuffer
+      "k" 'kill-buffer
+      "f" 'helm-find-files
+      "h" 'hydra-help/body
+      "p" 'popwin:close-popup-window
+      "[" 'winner-undo
+      "]" 'winner-redo
+      "n" 'hydra-navigation/body
+      "w" 'delete-window
+      "o" 'other-window
+      "a" 'align-regexp
+      "j" 'ace-jump-mode
+      "e" 'helm-flycheck
+      "g" 'google-this
+      "m" 'hydra-magit/body
+      "z" '(lambda() (interactive) (find-file "~/.emacs.d/myconfig/conf.org"))))
 #+END_SRC
 ** Evil
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -238,7 +244,8 @@
   (evil-set-initial-state 'eshell-mode 'emacs)
   (evil-set-initial-state 'term-mode 'emacs)
   (evil-set-initial-state 'ansi-term-mode 'emacs)
-  (evil-set-initial-state 'custom-mode 'emacs)
+  (evil-set-initial-state 'Custom-mode 'emacs)
+
   (setq evil-respect-visual-line-mode t)
   (define-key evil-normal-state-map "U" 'undo-tree-redo)
   (define-key evil-normal-state-map "\C-u" 'evil-scroll-up) ; C-u scrolls up now
@@ -504,6 +511,13 @@ Animations for text changes in evil mode.
  #+BEGIN_SRC emacs-lisp :tangle yes
  (require 'help-fns+)
  #+END_SRC
+** Smooth scrolling
+#+BEGIN_SRC emacs-lisp :tangle yes
+;; (use-package smooth-scrolling
+  ;; :config
+  ;; (smooth-scrolling-mode)
+  ;; (setq smooth-scroll-margin 4))
+#+END_SRC
 ** Olivetti
  Centers the text in the window.
  #+BEGIN_SRC emacs-lisp :tangle yes
@@ -519,6 +533,7 @@ Animations for text changes in evil mode.
    (org-bullets-mode))
  #+END_SRC
 ** Smartparens
+Run sp-cheat-sheet for a list of commands.
  #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package smartparens
   :init
@@ -588,6 +603,43 @@ Animations for text changes in evil mode.
 #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package discover-my-major)
 #+END_SRC
+** Spaceline # DISABLED
+#+BEGIN_SRC emacs-lisp :tangle yes
+;; (use-package spaceline
+  ;; :init
+  ;; (require 'spaceline-config)
+  ;; (spaceline-emacs-theme)
+  ;; (spaceline-toggle-minor-modes-off)
+  ;; (spaceline-toggle-buffer-position-on))
+#+END_SRC
+** Smart modeline # DISABLED
+#+BEGIN_SRC emacs-lisp :tangle yes
+;; (use-package smart-mode-line
+  ;; :init
+  ;; (setq sml/override-theme nil)
+  ;; (setq sml/no-confirm-load-theme t)
+  ;; (setq sml/mode-width full)
+  ;; :config
+  ;; (sml/setup))
+#+END_SRC
+** Doom modeline # DISABLED
+#+BEGIN_SRC emacs-lisp :tangle yes
+;; (use-package all-the-icons)
+;; (use-package doom-modeline
+      ;; :ensure t
+      ;; :defer t
+      ;; :hook (after-init . doom-modeline-init))
+#+END_SRC
+** Feebleline # DISABLED
+#+BEGIN_SRC emacs-lisp :tangle yes
+;; (use-package    feebleline
+  ;; :ensure       t
+  ;; :custom       (feebleline-show-git-branch             t)
+                ;; (feebleline-show-dir                    t)
+                ;; (feebleline-show-time                   t)
+                ;; (feebleline-show-previous-buffer        nil)
+  ;; :config       (feebleline-mode 1))
+#+END_SRC
 ** Popwin # DISABLED
  #+BEGIN_SRC emacs-lisp :tangle yes
 ;; (use-package popwin
@@ -603,8 +655,6 @@ Animations for text changes in evil mode.
    ;; (telephone-line-mode))
  #+END_SRC
 * Custom file
-
-* Custom
 #+BEGIN_SRC emacs-lisp :tangle yes
 (setq custom-file (concat user-emacs-directory "/myconfig/.custom.el"))
 (load custom-file 'noerror)
@@ -612,5 +662,4 @@ Animations for text changes in evil mode.
 #+END_SRC
 * Checkout
 https://github.com/bmag/emacs-purpose
-
 
