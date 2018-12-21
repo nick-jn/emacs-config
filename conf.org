@@ -196,7 +196,7 @@
 #+END_SRC
 * Org
 #+BEGIN_SRC emacs-lisp :tangle yes
-(setq org-src-fontify-natively t)
+;; (setq org-src-fontify-natively t)
 #+END_SRC
 * Winner mode 
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -229,7 +229,7 @@
       "e" 'helm-flycheck
       "g" 'google-this
       "m" 'hydra-magit/body
-      "z" '(lambda() (interactive) (find-file "~/.emacs.d/myconfig/conf.org"))))
+      "z" '(lambda() (interactive) "Open conf.org" (find-file "~/.emacs.d/myconfig/conf.org"))))
 #+END_SRC
 ** Evil
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -349,7 +349,7 @@ Animations for text changes in evil mode.
     ("/" hydra-ibuffer-filter/body :color blue)
     ("o" ibuffer-visit-buffer-other-window "other window" :color blue)
     ("q" quit-window "quit ibuffer" :color blue)
-    ("." nil "toggle hydra" :color blue))
+    ("SPC" nil "toggle hydra" :color blue))
   
   (defhydra hydra-ibuffer-mark (:color teal :columns 5
                                 :after-exit (hydra-ibuffer-main/body))
@@ -528,9 +528,8 @@ Animations for text changes in evil mode.
  #+END_SRC
 ** Org bullets
  #+BEGIN_SRC emacs-lisp :tangle yes
- (use-package org-bullets
-   :config
-   (org-bullets-mode))
+(use-package org-bullets
+    :hook (org-mode . org-bullets-mode))
  #+END_SRC
 ** Smartparens
 Run sp-cheat-sheet for a list of commands.
