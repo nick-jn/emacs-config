@@ -101,38 +101,73 @@
 (setq display-time-24hr-format t)
 (setq column-number-mode t)
 (set-face-foreground 'mode-line "white smoke")
-(set-face-foreground 'mode-line-buffer-id "light sky blue")
-(set-face-background 'mode-line "midnight blue")
+(set-face-background 'mode-line "navy")
 
 (defun mode-line-fill (face reserve)
-  "Return empty space using FACE and leaving RESERVE space on the right."
-  (when
+    "Return empty space using FACE and leaving RESERVE space on the right."
+    (when
     (and window-system (eq 'right (get-scroll-bar-mode)))
     (setq reserve (- reserve 3)))
-  (propertize " "
+    (propertize " "
     'display
     `((space :align-to (- (+ right right-fringe right-margin) ,reserve)))
     'face "white smoke"))
 
+(defun d/flycheck-lighter (state)
+    "Return flycheck information for the given error type STATE. Source: https://git.io/vQKzv"
+    (let* ((counts (flycheck-count-errors flycheck-current-errors))
+            (errorp (flycheck-has-current-errors-p state))
+            (err (or (cdr (assq state counts)) "?"))
+            (running (eq 'running flycheck-last-status-change)))
+
+    (if (or errorp running) (format "•%s" err))))
+
 (setq-default mode-line-format
-  (list
+    (list
     ;; left align
-    " %m | " ;; mode name
-    (propertize "%b | " 'face 'bold) ;; current buffer
-    "%p of %I | " ;; size
-    "C:%02c" ;; current column
-    '(:eval (when (buffer-modified-p)
-     (concat " | "  (propertize "Mod"
-                    'face 'font-lock-warning-face
-                    'help-echo "Buffer has been modified"))))
-    '(:eval (when buffer-read-only
-     (concat " | "  (propertize "RO"
-                    'face 'font-lock-warning-face
-                    'help-echo "Buffer is read-only"))))
+    ;; ==========
+
+    ;; major mode name
+    " %m | "
+
+    ;; buffer name and read-only/modified coloring
+    '(:eval
+        (propertize "%b" 'face
+        (if buffer-read-only
+            '(:foreground "green3" :weight bold)
+        (if (buffer-modified-p)
+            '(:foreground "red" :weight bold)
+            '(:weight bold)))))
+
+    ;; version control
+    '(vc-mode (" | " (:eval (substring vc-mode 1))))
+    " | %p of %I | " ;; size
+
+    ;; current column
+    "C:%02c"
+
+    ;; flycheck
+        '(:eval
+        (when (and (bound-and-true-p flycheck-mode)
+                    (or flycheck-current-errors
+                        (eq 'running flycheck-last-status-change)))
+            (concat " | "
+            (cl-loop for state in '((error . "#FB4933")
+                                    (warning . "#FABD2F")
+                                    (info . "#83A598"))
+                    as lighter = (d/flycheck-lighter (car state))
+                    when lighter
+                    concat (propertize
+                            lighter
+                            'face `(:foreground ,(cdr state))))
+            " ")))
 
     ;; right align
+    ;; ===========
     (mode-line-fill 'mode-line 6)
-    "%H%M "
+
+    ;; clock
+    "%H%M"
 ))
 #+END_SRC
 * Keyboard shortcuts
@@ -228,8 +263,8 @@
       "j" 'ace-jump-mode
       "e" 'helm-flycheck
       "g" 'google-this
-      "m" 'hydra-magit/body
-      "z" '(lambda() (interactive) "Open conf.org" (find-file "~/.emacs.d/myconfig/conf.org"))))
+      "m" 'magit-status
+      "z" '(lambda() (interactive) (find-file "~/.emacs.d/myconfig/conf.org"))))
 #+END_SRC
 ** Evil
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -538,7 +573,7 @@ Run sp-cheat-sheet for a list of commands.
   :init
   (require 'smartparens-config)
   :config
-  (smartparens-global-mode))
+  (smartparens-global-mode 0))
  #+END_SRC
 ** Ace Jump Mode
  #+BEGIN_SRC emacs-lisp :tangle yes
@@ -653,6 +688,7 @@ Run sp-cheat-sheet for a list of commands.
      ;; :config
    ;; (telephone-line-mode))
  #+END_SRC
+* Defuns
 * Custom file
 #+BEGIN_SRC emacs-lisp :tangle yes
 (setq custom-file (concat user-emacs-directory "/myconfig/.custom.el"))
