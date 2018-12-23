@@ -1,243 +1,243 @@
 * Startup options
 #+BEGIN_SRC emacs-lisp :tangle yes
-;; (setq debug-on-error t)
+  ;; (setq debug-on-error t)
 
-(add-to-list 'load-path "~/.emacs.d/various/")
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-;; (add-to-list 'package-archives
-;;             '("melpa-stable" . "https://stable.melpa.org/packages/") t)
-(package-initialize)
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-(require 'use-package)
-(setq use-package-always-ensure t)
-(eval-when-compile
-  (require 'use-package))
+  (add-to-list 'load-path "~/.emacs.d/various/")
+  (require 'package)
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+  ;; (add-to-list 'package-archives
+  ;;             '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+  (package-initialize)
+  (unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'use-package))
+  (require 'use-package)
+  (setq use-package-always-ensure t)
+  (eval-when-compile
+    (require 'use-package))
 
-;; (toggle-frame-fullscreen)
-;; (toggle-frame-maximized)
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
-(setq inhibit-startup-message t)
-(setq initial-scratch-message nil)
-(scroll-bar-mode 0)
-(tool-bar-mode 0)
-(fringe-mode 0)
-(add-hook 'after-init-hook 'ibuffer) ; show ibuffer after emacs starts
-;; (find-file "~/.emacs.d/myconfig/conf.org")    ; load conf.org
+  ;; (toggle-frame-fullscreen)
+  ;; (toggle-frame-maximized)
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  (setq inhibit-startup-message t)
+  (setq initial-scratch-message nil)
+  (scroll-bar-mode 0)
+  (tool-bar-mode 0)
+  (fringe-mode 0)
+  (add-hook 'after-init-hook 'ibuffer) ; show ibuffer after emacs starts
+  ;; (find-file "~/.emacs.d/myconfig/conf.org")    ; load conf.org
 #+END_SRC
 * Various options
 #+begin_src emacs-lisp :tangle yes
-(setq scroll-conservatively 101)           ; removes jumpiness when scrolling
-(setq display-time-default-load-average t) ; display load average in the modeline
-(setq-default indent-tabs-mode nil)        ; spaces instead of tabs
-(setq mode-require-final-newline t)        ; adds \n at the end of file
-(setq mouse-wheel-progressive-speed nil)   ; sane mouse wheel scrolling
-(setq scroll-margin 4)                     ; scroll before getting to the end of the screen
-(setq scroll-step 1)
-(fset 'yes-or-no-p 'y-or-n-p)              ; prompt y/n instead of yes/no
-(setq confirm-kill-emacs 'y-or-n-p)        ; confirmation on exit
-;; (setq gc-cons-percentage 0.1)
+  (setq scroll-conservatively 101)           ; removes jumpiness when scrolling
+  (setq display-time-default-load-average t) ; display load average in the modeline
+  (setq-default indent-tabs-mode nil)        ; spaces instead of tabs
+  (setq mode-require-final-newline t)        ; adds \n at the end of file
+  (setq mouse-wheel-progressive-speed nil)   ; sane mouse wheel scrolling
+  (setq scroll-margin 4)                     ; scroll before getting to the end of the screen
+  (setq scroll-step 1)
+  (fset 'yes-or-no-p 'y-or-n-p)              ; prompt y/n instead of yes/no
+  (setq confirm-kill-emacs 'y-or-n-p)        ; confirmation on exit
+  ;; (setq gc-cons-percentage 0.1)
 
-;; smaller #+begin_src font in org-mode
-(set-face-attribute 'org-meta-line nil :height 0.7 :slant 'normal)
+  ;; smaller #+begin_src font in org-mode
+  (set-face-attribute 'org-meta-line nil :height 0.7 :slant 'normal)
 
-;; backups
-(setq backup-directory-alist `(("." . "~/.emacsbak")))
-(setq delete-old-versions t
-  kept-new-versions 6
-  kept-old-versions 2
-  version-control t)
+  ;; backups
+  (setq backup-directory-alist `(("." . "~/.emacsbak")))
+  (setq delete-old-versions t
+    kept-new-versions 6
+    kept-old-versions 2
+    version-control t)
 
-;; history length options
-(setq history-length 100)
-(put 'minibuffer-history 'history-length 50)
-(put 'evil-ex-history 'history-length 50)
-(put 'kill-ring 'history-length 25)
+  ;; history length options
+  (setq history-length 100)
+  (put 'minibuffer-history 'history-length 50)
+  (put 'evil-ex-history 'history-length 50)
+  (put 'kill-ring 'history-length 25)
+#+END_SRC
+* Persistence
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (save-place-mode 1) ; remember point location when killing buffer
 #+END_SRC
 * Shell
 #+BEGIN_SRC emacs-lisp :tangle yes
-(defvar my-term-shell "/bin/bash")
-(defadvice ansi-term (before force-bash)
-  (interactive (list my-term-shell)))
-(ad-activate 'ansi-term)
+  (defvar my-term-shell "/bin/bash")
+  (defadvice ansi-term (before force-bash)
+    (interactive (list my-term-shell)))
+  (ad-activate 'ansi-term)
 #+END_SRC
 * Line numbers
 #+BEGIN_SRC emacs-lisp :tangle yes
-(setq display-line-numbers-type 'relative)
-(setq display-line-numbers-grow-only t)
-(setq display-line-numbers-width-start 3)
-(global-display-line-numbers-mode)
+  (setq display-line-numbers-type 'relative)
+  (setq display-line-numbers-grow-only t)
+  (setq display-line-numbers-width-start 3)
+  (global-display-line-numbers-mode)
 #+END_SRC
 * Word wrapping
 #+BEGIN_SRC emacs-lisp :tangle yes
-(setq fill-column 79)
-;; (require 'fill-column-indicator)
-;; (fci-mode 1)
-;; (global-visual-fill-column-mode 1)
-;; (global-visual-line-mode 1)
-(adaptive-wrap-prefix-mode 1)
-(toggle-word-wrap 1)
+  (setq fill-column 79)
+  ;; (require 'fill-column-indicator)
+  ;; (fci-mode 1)
+  ;; (global-visual-fill-column-mode 1)
+  ;; (global-visual-line-mode 1)
+  (adaptive-wrap-prefix-mode 1)
+  (toggle-word-wrap 1)
 #+END_SRC
 * Parens
 #+BEGIN_SRC emacs-lisp :tangle yes
-;; (setq electric-pair-preserve-balance nil) ; Auto-complete brackets, etc.
-;; (electric-pair-mode t)
-(show-paren-mode 1) ; highlight paired parens
+  ;; (setq electric-pair-preserve-balance nil) ; Auto-complete brackets, etc.
+  ;; (electric-pair-mode t)
+  (show-paren-mode 1) ; highlight paired parens
 #+END_SRC
 * Cursor, hl-line
 #+BEGIN_SRC emacs-lisp :tangle yes
-(blink-cursor-mode 0)
-(global-hl-line-mode 1)
-(set-cursor-color "firebrick")
-(set-face-background 'hl-line "gainsboro")
-(set-face-foreground 'highlight nil)
-(setq size-indication-mode t)
+  (blink-cursor-mode 0)
+  (global-hl-line-mode 1)
+  (set-cursor-color "firebrick")
+  (set-face-background 'hl-line "gainsboro")
+  (set-face-foreground 'highlight nil)
+  (setq size-indication-mode t)
 #+END_SRC
 * Modeline
 #+BEGIN_SRC emacs-lisp :tangle yes
-(display-time-mode 1)
-(setq display-time-24hr-format t)
-(setq column-number-mode t)
-(set-face-foreground 'mode-line "white smoke")
-(set-face-background 'mode-line "navy")
-
-(defun mode-line-fill (face reserve)
-    "Return empty space using FACE and leaving RESERVE space on the right."
-    (when
-    (and window-system (eq 'right (get-scroll-bar-mode)))
-    (setq reserve (- reserve 3)))
-    (propertize " "
-    'display
-    `((space :align-to (- (+ right right-fringe right-margin) ,reserve)))
-    'face "white smoke"))
-
-(defun d/flycheck-lighter (state)
-    "Return flycheck information for the given error type STATE. Source: https://git.io/vQKzv"
-    (let* ((counts (flycheck-count-errors flycheck-current-errors))
-            (errorp (flycheck-has-current-errors-p state))
-            (err (or (cdr (assq state counts)) "?"))
-            (running (eq 'running flycheck-last-status-change)))
-
-    (if (or errorp running) (format "•%s" err))))
-
-(setq-default mode-line-format
-    (list
-    ;; left align
-    ;; ==========
-
-    ;; major mode name
-    " %m | "
-
-    ;; buffer name and read-only/modified coloring
-    '(:eval
-        (propertize "%b" 'face
-        (if buffer-read-only
-            '(:foreground "green3" :weight bold)
-        (if (buffer-modified-p)
-            '(:foreground "red" :weight bold)
-            '(:weight bold)))))
-
-    ;; version control
-    '(vc-mode (" | " (:eval (substring vc-mode 1))))
-    " | %p of %I | " ;; size
-
-    ;; current column
-    "C:%02c"
-
-    ;; flycheck
-        '(:eval
-        (when (and (bound-and-true-p flycheck-mode)
-                    (or flycheck-current-errors
-                        (eq 'running flycheck-last-status-change)))
-            (concat " | "
-            (cl-loop for state in '((error . "#FB4933")
-                                    (warning . "#FABD2F")
-                                    (info . "#83A598"))
-                    as lighter = (d/flycheck-lighter (car state))
-                    when lighter
-                    concat (propertize
-                            lighter
-                            'face `(:foreground ,(cdr state))))
-            " ")))
-
-    ;; right align
-    ;; ===========
-    (mode-line-fill 'mode-line 6)
-
-    ;; clock
-    "%H%M"
-))
+  (display-time-mode 1)
+  (setq display-time-24hr-format t)
+  (setq column-number-mode t)
+  (set-face-foreground 'mode-line "white smoke")
+  (set-face-background 'mode-line "navy")
+  
+  (defun mode-line-fill (face reserve)
+      "Return empty space using FACE and leaving RESERVE space on the right."
+      (when
+      (and window-system (eq 'right (get-scroll-bar-mode)))
+      (setq reserve (- reserve 3)))
+      (propertize " "
+      'display
+      `((space :align-to (- (+ right right-fringe right-margin) ,reserve)))
+      'face "white smoke"))
+  
+  (defun d/flycheck-lighter (state)
+      "Return flycheck information for the given error type STATE. Source: https://git.io/vQKzv"
+      (let* ((counts (flycheck-count-errors flycheck-current-errors))
+              (errorp (flycheck-has-current-errors-p state))
+              (err (or (cdr (assq state counts)) "?"))
+              (running (eq 'running flycheck-last-status-change)))
+  
+      (if (or errorp running) (format "•%s" err))))
+  
+  (setq-default mode-line-format
+      (list
+      ;; left align
+      ;; ==========
+  
+      ;; major mode name
+      " %m | "
+  
+      ;; buffer name and read-only/modified coloring
+      '(:eval
+          (propertize "%b" 'face
+          (if buffer-read-only
+              '(:foreground "green3" :weight bold)
+          (if (buffer-modified-p)
+              '(:foreground "red" :weight bold)
+              '(:weight bold)))))
+  
+      ;; version control
+      '(vc-mode (" | " (:eval (substring vc-mode 1))))
+      " | %p of %I | " ;; size
+  
+      ;; current column
+      "C:%02c"
+  
+      ;; flycheck
+          '(:eval
+          (when (and (bound-and-true-p flycheck-mode)
+                      (or flycheck-current-errors
+                          (eq 'running flycheck-last-status-change)))
+              (concat " | "
+              (cl-loop for state in '((error . "#FB4933")
+                                      (warning . "#FABD2F")
+                                      (info . "#83A598"))
+                      as lighter = (d/flycheck-lighter (car state))
+                      when lighter
+                      concat (propertize
+                              lighter
+                              'face `(:foreground ,(cdr state))))
+              " ")))
+  
+      ;; right align
+      ;; ===========
+      (mode-line-fill 'mode-line 6)
+  
+      ;; clock
+      "%H%M"
+  ))
 #+END_SRC
 * Keyboard shortcuts
 #+BEGIN_SRC emacs-lisp :tangle yes
-(global-set-key (kbd "C-c e") (lambda() (interactive) (load-file user-init-file)))
-(global-set-key (kbd "<f5>")  'ansi-term)
-(global-set-key (kbd "C-c b") 'previous-buffer)
-(global-set-key (kbd "C-c n") 'next-buffer)
-(global-set-key (kbd "C-c v") 'set-variable)
-
-(global-set-key (kbd "<f1>")     'describe-key)
-(global-set-key (kbd "C-c <f1>") 'which-key-show-major-mode)
-(global-set-key (kbd "<f2>")     'other-window)
-(global-set-key (kbd "<f3>")     'delete-other-windows)
-(global-set-key (kbd "<f4>")     'delete-window)
-(global-set-key (kbd "<f6>") (lambda() (interactive) (find-file "~/.emacs")))
-
-(define-key key-translation-map (kbd "<print>") (kbd "ESC"))
-
-(global-set-key (kbd "C-c u") 'universal-argument)
-(global-set-key (kbd "C-;")   'comment-line)
-
-(global-set-key (kbd "C-x C-b") 'ibuffer)
-
-(global-set-key (kbd "S-C-<left>")  'shrink-window-horizontally)
-(global-set-key (kbd "S-C-<right>") 'enlarge-window-horizontally)
-(global-set-key (kbd "S-C-<down>")  'shrink-window)
-(global-set-key (kbd "S-C-<up>")    'enlarge-window)
+  (global-set-key (kbd "C-c e") (lambda() (interactive) (load-file user-init-file)))
+  (global-set-key (kbd "<f5>")  'eshell)
+  (global-set-key (kbd "C-c b") 'previous-buffer)
+  (global-set-key (kbd "C-c n") 'next-buffer)
+  (global-set-key (kbd "C-c v") 'set-variable)
+  
+  (global-set-key (kbd "<f1>")     'describe-key)
+  (global-set-key (kbd "C-c <f1>") 'which-key-show-major-mode)
+  (global-set-key (kbd "<f2>")     'other-window)
+  (global-set-key (kbd "<f3>")     'delete-other-windows)
+  (global-set-key (kbd "<f4>")     'delete-window)
+  (global-set-key (kbd "<f6>") (lambda() (interactive) (find-file "~/.emacs")))
+  
+  (define-key key-translation-map (kbd "<print>") (kbd "ESC"))
+  
+  (global-set-key (kbd "C-c u") 'universal-argument)
+  (global-set-key (kbd "C-;")   'comment-line)
+  
+  (global-set-key (kbd "C-x C-b") 'ibuffer)
+  
+  (global-set-key (kbd "S-C-<left>")  'shrink-window-horizontally)
+  (global-set-key (kbd "S-C-<right>") 'enlarge-window-horizontally)
+  (global-set-key (kbd "S-C-<down>")  'shrink-window)
+  (global-set-key (kbd "S-C-<up>")    'enlarge-window)
 #+END_SRC
 * C mode
 #+BEGIN_SRC emacs-lisp :tangle yes
-(setq c-default-style "java")
+  (setq c-default-style "java")
 #+END_SRC
-* ibuffer
+* IBuffer
 #+BEGIN_SRC emacs-lisp :tangle yes
-(setq ibuffer-saved-filter-groups
-  (quote (("default"
-    ("dired" (mode . dired-mode))
-    ("perl" (mode . cperl-mode))
-    ("helm" (mode . helm-mode))
-    ("planner" (or
-                (name . "^\\*Calendar\\*$")
-                (name . "^diary$")
-                (mode . muse-mode)))
-    ("emacs" (or
-                (name . "^\\*scratch\\*$")
-                (name . "^\\*.*?\\*$")
-                (name . "^\\*Messages\\*$")))
-    ("gnus" (or
-            (mode . message-mode)
-            (mode . bbdb-mode)
-            (mode . mail-mode)
-            (mode . gnus-group-mode)
-            (mode . gnus-summary-mode)
-            (mode . gnus-article-mode)
-            (name . "^\\.bbdb$")
-            (name . "^\\.newsrc-dribble")))))))
-
-;; display hydra when loading ibuffer
-(add-hook 'ibuffer-hook #'hydra-ibuffer-main/body)
+  (setq ibuffer-default-sorting-mode 'major-mode)
+  (setq ibuffer-saved-filter-groups
+    '(("default"
+      ("Dired" (mode . dired-mode))
+      ("Planner" (or
+                  (name . "^\\*Calendar\\*$")
+                  (name . "^diary$")
+                  (mode . muse-mode)))
+  
+      ("Magit" (name . "^\\magit"))
+  
+      ("Internal" (name . "^\\*.*$"))
+  
+  )))
+  
+  (setq ibuffer-show-empty-filter-groups nil)
+  (add-hook 'ibuffer-mode-hook
+            (lambda ()
+              (ibuffer-switch-to-saved-filter-groups "default")))
+  ;; display hydra when loading ibuffer
+  ;; (add-hook 'ibuffer-hook #'hydra-ibuffer-main/body)
 #+END_SRC
 * Org
 #+BEGIN_SRC emacs-lisp :tangle yes
-;; (setq org-src-fontify-natively t)
+  ;; (setq org-src-fontify-natively t)
 #+END_SRC
 * Winner mode 
 #+BEGIN_SRC emacs-lisp :tangle yes
-(winner-mode)
-#+END_SRC
-* =========================
+  (winner-mode)
+  #+END_SRC
+=========================
 * Evil
 ** Evil Leader
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -268,71 +268,79 @@
 #+END_SRC
 ** Evil
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package evil
-  :init
-  (setq evil-want-integration t)
-  :config
-  (evil-mode 1)
-  (when (require 'evil-collection nil t)
-    (evil-collection-init))
-  ;; Set emacs mode for these buffers:
-  (evil-set-initial-state 'eshell-mode 'emacs)
-  (evil-set-initial-state 'term-mode 'emacs)
-  (evil-set-initial-state 'ansi-term-mode 'emacs)
-  (evil-set-initial-state 'Custom-mode 'emacs)
-
-  (setq evil-respect-visual-line-mode t)
-  (define-key evil-normal-state-map "U" 'undo-tree-redo)
-  (define-key evil-normal-state-map "\C-u" 'evil-scroll-up) ; C-u scrolls up now
-  ;; Make evil-mode up/down operate in screen lines instead of logical line
-  (define-key evil-motion-state-map "j" 'evil-next-visual-line)
-  (define-key evil-motion-state-map "k" 'evil-previous-visual-line)
-  ;; Also in visual mode
-  (define-key evil-visual-state-map "j" 'evil-next-visual-line)
-  (define-key evil-visual-state-map "k" 'evil-previous-visual-line))
-;; center screen while searching
-(defadvice evil-search-next
-  (after advice-for-evil-search-next activate)
-  (evil-scroll-line-to-center (line-number-at-pos)))
-(defadvice evil-search-previous
-  (after advice-for-evil-search-previous activate)
-  (evil-scroll-line-to-center (line-number-at-pos)))
+  (use-package evil
+    :init
+    (setq evil-want-integration t)
+    :config
+    (evil-mode 1)
+    (when (require 'evil-collection nil t)
+      (evil-collection-init))
+    ;; Set emacs mode for these buffers:
+    (evil-set-initial-state 'eshell-mode 'emacs)
+    (evil-set-initial-state 'term-mode 'emacs)
+    (evil-set-initial-state 'ansi-term-mode 'emacs)
+    (evil-set-initial-state 'Custom-mode 'emacs)
+  
+    (setq evil-respect-visual-line-mode t)
+    (define-key evil-normal-state-map "U" 'undo-tree-redo)
+    (define-key evil-normal-state-map "\C-u" 'evil-scroll-up) ; C-u scrolls up now
+    ;; Make evil-mode up/down operate in screen lines instead of logical line
+    (define-key evil-motion-state-map "j" 'evil-next-visual-line)
+    (define-key evil-motion-state-map "k" 'evil-previous-visual-line)
+    ;; Also in visual mode
+    (define-key evil-visual-state-map "j" 'evil-next-visual-line)
+    (define-key evil-visual-state-map "k" 'evil-previous-visual-line))
+  ;; center screen while searching
+  (defadvice evil-search-next
+    (after advice-for-evil-search-next activate)
+    (evil-scroll-line-to-center (line-number-at-pos)))
+  (defadvice evil-search-previous
+    (after advice-for-evil-search-previous activate)
+    (evil-scroll-line-to-center (line-number-at-pos)))
+#+END_SRC
+** Evil Magit
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package evil-magit)
 #+END_SRC
 ** Evil Surround
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package evil-surround
-  :ensure t
-  :config
-  (global-evil-surround-mode 1))
+  (use-package evil-surround
+    :ensure t
+    :config
+    (global-evil-surround-mode 1))
 #+END_SRC
 ** Evil Commentary
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package evil-commentary
-  :config
-  (evil-commentary-mode))
-#+END_SRC
-** Evil Nerd Commenter #DISABLED
-#+BEGIN_SRC emacs-lisp :tangle yes
-;; (use-package evil-nerd-commenter
-;;   :config
-;;   (require 'evil-nerd-commenter)
-;;   (evilnc-default-hotkeys))
-#+END_SRC
+  (use-package evil-commentary
+    :config
+    (evil-commentary-mode))
+  #+END_SRC
 ** Evil Goggles
 Animations for text changes in evil mode.
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package evil-goggles
-  :init
-  (setq evil-goggles-duration 0.200) ; default is 0.200
-  :config
-  (evil-goggles-mode)) 
+  (use-package evil-goggles
+    :init
+    (setq evil-goggles-duration 0.200) ; default is 0.200
+    :config
+    (evil-goggles-mode)) 
 #+END_SRC
+** Evil Org
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package org-evil)
+#+END_SRC
+** Evil Nerd Commenter #DISABLED
+#+BEGIN_SRC emacs-lisp :tangle yes
+  ;; (use-package evil-nerd-commenter
+  ;;   :config
+  ;;   (require 'evil-nerd-commenter)
+  ;;   (evilnc-default-hotkeys))
+  #+END_SRC
 * Hydra
 ** Hydra
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package hydra
-  :config
-  (setq hydra-is-helpful t))
+  (use-package hydra
+    :config
+    (setq hydra-is-helpful t))
 #+END_SRC
 ** Navigation
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -449,102 +457,102 @@ Animations for text changes in evil mode.
 #+END_SRC
 ** Magit
 #+BEGIN_SRC emacs-lisp :tangle yes
-(defhydra hydra-magit (:color blue :columns 8)
-  "Magit"
-  ("s" magit-status "status")
-  ("c" magit-checkout "checkout")
-  ("m" magit-merge "merge")
-  ("l" magit-log "log")
-  ("!" magit-git-command "command")
-  ("$" magit-process "process")
-  ("g" hydra-git-gutter/body "git gutter"))
+  (defhydra hydra-magit (:color blue :columns 8)
+    "Magit"
+    ("s" magit-status "status")
+    ("c" magit-checkout "checkout")
+    ("m" magit-merge "merge")
+    ("l" magit-log "log")
+    ("!" magit-git-command "command")
+    ("$" magit-process "process")
+    ("g" hydra-git-gutter/body "git gutter"))
 #+END_SRC
 ** Git gutter
 #+BEGIN_SRC emacs-lisp :tangle yes
-(defhydra hydra-git-gutter()
-  "git-gutter"
-  ("j" git-gutter:next-hunk)
-  ("k" git-gutter:previous-hunk)
-  ("SPC" nil "exit"))
+  (defhydra hydra-git-gutter()
+    "git-gutter"
+    ("j" git-gutter:next-hunk)
+    ("k" git-gutter:previous-hunk)
+    ("SPC" nil "exit"))
 #+END_SRC
 * Git gutter
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package git-gutter
-  :init
-  (global-git-gutter-mode))
+  (use-package git-gutter
+    :init
+    (global-git-gutter-mode))
 #+END_SRC
 * Which Key
-#+BEGIN_SRC emacs-lisp :tangle yes
-(use-package which-key
-  :defer 1
-  :config (which-key-mode))
-(which-key-setup-side-window-right-bottom)
-(setq which-key-idle-delay 0.2)
-#+END_SRC
+  #+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package which-key
+    :defer 1
+    :config (which-key-mode))
+  (which-key-setup-side-window-right-bottom)
+  (setq which-key-idle-delay 0.2)
+  #+END_SRC
 * Company
-#+BEGIN_SRC emacs-lisp :tangle yes
-(use-package company
-  :config
-  (add-hook 'after-init-hook 'global-company-mode)
-  (with-eval-after-load 'company
-    (add-hook 'c++-mode-hook 'company-mode)
-    (add-hook 'c-mode-hook 'company-mode)))
-
-(use-package company-c-headers
-  :ensure t)
-(setq company-backends (delete 'company-semantic company-backends))
-(add-to-list 'company-backends 'company-c-headers)
+  #+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package company
+    :config
+    (add-hook 'after-init-hook 'global-company-mode)
+    (with-eval-after-load 'company
+      (add-hook 'c++-mode-hook 'company-mode)
+      (add-hook 'c-mode-hook 'company-mode)))
+  
+  (use-package company-c-headers
+    :ensure t)
+  (setq company-backends (delete 'company-semantic company-backends))
+  (add-to-list 'company-backends 'company-c-headers)
 #+END_SRC
 * Helm
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package helm
-  :config
-  (helm-mode)
-  (setq helm-mode-fuzzy-match t)
-  (global-set-key (kbd "M-x") 'helm-M-x)
-  (setq helm-autoresize-mode t))
+  (use-package helm
+    :config
+    (helm-mode)
+    (setq helm-mode-fuzzy-match t)
+    (global-set-key (kbd "M-x") 'helm-M-x)
+    (setq helm-autoresize-mode t))
 
-(use-package helm-descbinds
-  :config
-  (helm-descbinds-mode)
-  (global-set-key (kbd "C-x C-f") 'helm-find-files)
-  (global-set-key (kbd "C-h a") 'helm-apropos))
+  (use-package helm-descbinds
+    :config
+    (helm-descbinds-mode)
+    (global-set-key (kbd "C-x C-f") 'helm-find-files)
+    (global-set-key (kbd "C-h a") 'helm-apropos))
 
-;; helm-company
-(autoload 'helm-company "helm-company") ; not necessary if using ELPA package
-(eval-after-load 'company
-  '(progn
-     (define-key company-mode-map (kbd "C-:") 'helm-company)
-     (define-key company-active-map (kbd "C-:") 'helm-company)))
-(add-to-list 'company-backends 'company-math-symbols-unicode)
+  ;; helm-company
+  (autoload 'helm-company "helm-company") ; not necessary if using ELPA package
+  (eval-after-load 'company
+    '(progn
+       (define-key company-mode-map (kbd "C-:") 'helm-company)
+       (define-key company-active-map (kbd "C-:") 'helm-company)))
+  (add-to-list 'company-backends 'company-math-symbols-unicode)
 #+END_SRC
 * Flycheck
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package flycheck
-  :config
-  (global-flycheck-mode)
-  (add-hook 'after-init-hook #'global-flycheck-mode)
-  (setq flycheck-pos-tip-mode t)
-  (with-eval-after-load 'flycheck
-    (flycheck-pos-tip-mode))) ; show tooltip when point is on the error
+  (use-package flycheck
+    :config
+    (global-flycheck-mode)
+    (add-hook 'after-init-hook #'global-flycheck-mode)
+    (setq flycheck-pos-tip-mode t)
+    (with-eval-after-load 'flycheck
+      (flycheck-pos-tip-mode))) ; show tooltip when point is on the error
 #+END_SRC
 * YASnippet
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package yasnippet
-  :init
-  (add-to-list 'load-path "~/.emacs.d/plugins/yasnippet")
-  :config
-  (yas-global-mode 1))
+  (use-package yasnippet
+    :init
+    (add-to-list 'load-path "~/.emacs.d/plugins/yasnippet")
+    :config
+    (yas-global-mode 1))
 #+END_SRC
 * Magit
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package magit)
+  (use-package magit)
 #+END_SRC
 * =========================
 * Various packages
 ** help-fns+
  #+BEGIN_SRC emacs-lisp :tangle yes
- (require 'help-fns+)
+  (require 'help-fns+)
  #+END_SRC
 ** Smooth scrolling
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -556,95 +564,169 @@ Animations for text changes in evil mode.
 ** Olivetti
  Centers the text in the window.
  #+BEGIN_SRC emacs-lisp :tangle yes
- (use-package olivetti
-   :config
-   (setq olivetti-body-width 120)
-   (global-set-key (kbd "C-c o") 'olivetti-mode))
+  (use-package olivetti
+    :config
+    (setq olivetti-body-width 120)
+    (global-set-key (kbd "C-c o") 'olivetti-mode))
  #+END_SRC
 ** Org bullets
  #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package org-bullets
-    :hook (org-mode . org-bullets-mode))
- #+END_SRC
+  (use-package org-bullets
+      :hook (org-mode . org-bullets-mode))
+   #+END_SRC
 ** Smartparens
 Run sp-cheat-sheet for a list of commands.
  #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package smartparens
-  :init
-  (require 'smartparens-config)
-  :config
-  (smartparens-global-mode 0))
+  (use-package smartparens
+    :init
+    (require 'smartparens-config)
+    :config
+    (smartparens-global-mode 0))
  #+END_SRC
 ** Ace Jump Mode
  #+BEGIN_SRC emacs-lisp :tangle yes
- (use-package ace-jump-mode)
+  (use-package ace-jump-mode)
  #+END_SRC
 ** Try
  #+BEGIN_SRC emacs-lisp :tangle yes
- (use-package try)
+  (use-package try)
  #+END_SRC
+** Highlight indent guides
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package highlight-indent-guides
+    :config
+    (add-hook 'prog-mode-hook 'highlight-indent-guides))
+#+END_SRC
 ** Shackle 
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package shackle)
-(shackle-mode t)
-(setq helm-display-function 'pop-to-buffer)
-(setq shackle-rules
-      '(("*helm-ag*"              :select t   :align right :size 0.5)
-        ("*helm semantic/imenu*"  :select t   :align right :size 0.4)
-        ("*helm org inbuffer*"    :select t   :align right :size 0.4)
-        (flycheck-error-list-mode :select nil :align below :size 0.25)
-        (compilation-mode         :select nil :align below :size 0.25)
-        (messages-buffer-mode     :select t   :align below :size 0.25)
-        (inferior-emacs-lisp-mode :select t   :align below :size 0.25)
-        (ert-results-mode         :select t   :align below :size 0.5)
-        (calendar-mode            :select t   :align below :size 0.25)
-        (racer-help-mode          :select t   :align right :size 0.5)
-        (help-mode                :select t   :align below :size 0.5)
-        (helpful-mode             :select t   :align below :size 0.5)
-        ("*Warnings*"             :select t   :align below :size 0.5)
-        ("*Compile-Log*"          :select t   :align below :size 0.5)
-        (" *Deletions*"           :select t   :align below :size 0.25)
-        (" *Marked Files*"        :select t   :align below :size 0.25)
-        ("*Org Select*"           :select t   :align below :size 0.33)
-        ("*Org Note*"             :select t   :align below :size 0.33)
-        ("*Org Links*"            :select t   :align below :size 0.2)
-        (" *Org todo*"            :select t   :align below :size 0.2)
-        ("*Man.*"                 :select t   :align below :size 0.5  :regexp t)
-        ("*helm.*"                :select t   :align below :size 0.45 :regexp t)
-        ("*Org Src.*"             :select t   :align right :size 0.5  :regexp t)))
-#+END_SRC
+  (use-package shackle)
+  (shackle-mode t)
+  (setq helm-display-function 'pop-to-buffer)
+  (setq shackle-rules
+        '(("*helm-ag*"              :select t   :align right :size 0.5)
+          ("*helm semantic/imenu*"  :select t   :align right :size 0.4)
+          ("*helm org inbuffer*"    :select t   :align right :size 0.4)
+          (flycheck-error-list-mode :select nil :align below :size 0.25)
+          (compilation-mode         :select nil :align below :size 0.25)
+          (messages-buffer-mode     :select t   :align below :size 0.25)
+          (inferior-emacs-lisp-mode :select t   :align below :size 0.25)
+          (ert-results-mode         :select t   :align below :size 0.5)
+          (calendar-mode            :select t   :align below :size 0.25)
+          (racer-help-mode          :select t   :align right :size 0.5)
+          (help-mode                :select t   :align below :size 0.5)
+          (helpful-mode             :select t   :align below :size 0.5)
+          (magit-log-mode           :select t   :align right :size 0.5)
+          (magit-diff-mode          :select t   :align right :size 0.7)
+          (magit-revision-mode      :select t   :align right :size 0.7)
+          ("*Warnings*"             :select t   :align below :size 0.5)
+          ("*Compile-Log*"          :select t   :align below :size 0.5)
+          (" *Deletions*"           :select t   :align below :size 0.25)
+          (" *Marked Files*"        :select t   :align below :size 0.25)
+          ("*Org Select*"           :select t   :align below :size 0.33)
+          ("*Org Note*"             :select t   :align below :size 0.33)
+          ("*Org Links*"            :select t   :align below :size 0.2)
+          (" *Org todo*"            :select t   :align below :size 0.2)
+          ("*Man.*"                 :select t   :align below :size 0.5  :regexp t)
+          ("*helm.*"                :select t   :align below :size 0.45 :regexp t)
+          ("*Org Src.*"             :select t   :align right :size 0.5  :regexp t)))
+  #+END_SRC
+*** Rules
+;; Elements of the `shackle-rules' alist:
+;;
+;; |-----------+------------------------+--------------------------------------------------|
+;; | CONDITION | symbol                 | Major mode of the buffer to match                |
+;; |           | string                 | Name of the buffer                               |
+;; |           |                        | - which can be turned into regexp matching       |
+;; |           |                        | by using the :regexp key with a value of t       |
+;; |           |                        | in the key-value part                            |
+;; |           | list of either         | a list groups either symbols or strings          |
+;; |           | symbol or string       | (as described earlier) while requiring at        |
+;; |           |                        | least one element to match                       |
+;; |           | t                      | t as the fallback rule to follow when no         |
+;; |           |                        | other match succeeds.                            |
+;; |           |                        | If you set up a fallback rule, make sure         |
+;; |           |                        | it's the last rule in shackle-rules,             |
+;; |           |                        | otherwise it will always be used.                |
+;; |-----------+------------------------+--------------------------------------------------|
+;; | KEY-VALUE | :select t              | Select the popped up window. The                 |
+;; |           |                        | `shackle-select-reused-windows' option makes     |
+;; |           |                        | this the default for windows already             |
+;; |           |                        | displaying the buffer.                           |
+;; |-----------+------------------------+--------------------------------------------------|
+;; |           | :inhibit-window-quit t | Special buffers usually have `q' bound to        |
+;; |           |                        | `quit-window' which commonly buries the buffer   |
+;; |           |                        | and deletes the window. This option inhibits the |
+;; |           |                        | latter which is especially useful in combination |
+;; |           |                        | with :same, but can also be used with other keys |
+;; |           |                        | like :other as well.                             |
+;; |-----------+------------------------+--------------------------------------------------|
+;; |           | :ignore t              | Skip handling the display of the buffer in       |
+;; |           |                        | question. Keep in mind that while this avoids    |
+;; |           |                        | switching buffers, popping up windows and        |
+;; |           |                        | displaying frames, it does not inhibit what may  |
+;; |           |                        | have preceded this command, such as the          |
+;; |           |                        | creation/update of the buffer to be displayed.   |
+;; |-----------+------------------------+--------------------------------------------------|
+;; |           | :same t                | Display buffer in the current window.            |
+;; |           | :popup t               | Pop up a new window instead of displaying        |
+;; |           | *mutually exclusive*   | the buffer in the current one.                   |
+;; |-----------+------------------------+--------------------------------------------------|
+;; |           | :other t               | Reuse the window `other-window' would select if  |
+;; |           | *must not be used      | there's more than one window open, otherwise pop |
+;; |           | with :align, :size*    | up a new window. When used in combination with   |
+;; |           |                        | the :frame key, do the equivalent to             |
+;; |           |                        | other-frame or a new frame                       |
+;; |-----------+------------------------+--------------------------------------------------|
+;; |           | :align                 | Align a new window at the respective side of     |
+;; |           | 'above, 'below,        | the current frame or with the default alignment  |
+;; |           | 'left, 'right,         | (customizable with `shackle-default-alignment')  |
+;; |           | or t (default)         | by deleting every other window than the          |
+;; |           |                        | currently selected one, then wait for the window |
+;; |           |                        | to be "dealt" with. This can either happen by    |
+;; |           |                        | burying its buffer with q or by deleting its     |
+;; |           |                        | window with C-x 0.                               |
+;; |           | :size                  | Aligned window use a default ratio of 0.5 to     |
+;; |           | a floating point       | split up the original window in half             |
+;; |           | value between 0 and 1  | (customizable with `shackle-default-size'), the  |
+;; |           | is interpreted as a    | size can be changed on a per-case basis by       |
+;; |           | ratio. An integer >=1  | providing a different floating point value like  |
+;; |           | is interpreted as a    | 0.33 to make it occupy a third of the original   |
+;; |           | number of lines.       | window's size.                                   |
+;; |-----------+------------------------+--------------------------------------------------|
+;; |           | :frame t               | Pop buffer to a frame instead of a window.       |
+;; |-----------+------------------------+--------------------------------------------------|
 ** Expand region
  #+BEGIN_SRC emacs-lisp :tangle yes
- (use-package expand-region
-   :config
-   (global-set-key (kbd "C-=") 'er/expand-region))
+  (use-package expand-region
+    :config
+    (global-set-key (kbd "C-=") 'er/expand-region))
  #+END_SRC
 ** Man 
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package man)
+  (use-package man)
 #+END_SRC
 ** Pdf Tools
  #+BEGIN_SRC emacs-lisp :tangle yes
- (use-package pdf-tools
-   :config
-   (pdf-tools-install))
+  (use-package pdf-tools
+    :config
+    (pdf-tools-install))
  #+END_SRC
 ** Google this
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package google-this)
+  (use-package google-this)
 #+END_SRC
 ** Discover my major
 #+BEGIN_SRC emacs-lisp :tangle yes
-(use-package discover-my-major)
+  (use-package discover-my-major)
 #+END_SRC
 ** Spaceline # DISABLED
 #+BEGIN_SRC emacs-lisp :tangle yes
-;; (use-package spaceline
-  ;; :init
-  ;; (require 'spaceline-config)
-  ;; (spaceline-emacs-theme)
-  ;; (spaceline-toggle-minor-modes-off)
-  ;; (spaceline-toggle-buffer-position-on))
+  ;; (use-package spaceline
+  ;;   :init
+  ;;   (require 'spaceline-config)
+  ;;   (spaceline-emacs-theme)
+  ;;   (spaceline-toggle-minor-modes-off)
+  ;;   (spaceline-toggle-buffer-position-on))
 #+END_SRC
 ** Smart modeline # DISABLED
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -691,9 +773,9 @@ Run sp-cheat-sheet for a list of commands.
 * Defuns
 * Custom file
 #+BEGIN_SRC emacs-lisp :tangle yes
-(setq custom-file (concat user-emacs-directory "/myconfig/.custom.el"))
-(load custom-file 'noerror)
-(define-key key-translation-map (kbd "ESC") (kbd "C-g"))
+  (setq custom-file (concat user-emacs-directory "/myconfig/.custom.el"))
+  (load custom-file 'noerror)
+  (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
 #+END_SRC
 * Checkout
 https://github.com/bmag/emacs-purpose
