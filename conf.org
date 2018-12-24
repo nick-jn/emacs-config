@@ -48,7 +48,7 @@
   (setq auto-window-vscroll nil)
 
   ;; backups
-  (setq backup-directory-alist `(("." . (concat user-emacs-directory "/bak"))))
+  (setq backup-directory-alist `(("." . "~/.emacs.d/bak")))
   (setq auto-save-file-name-transforms
           `((".*" "~/.emacs.d/bak/autosaves" t))) ;;asdasds
   (setq delete-old-versions t
