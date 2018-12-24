@@ -23,6 +23,7 @@
   (setq initial-scratch-message nil)
   (scroll-bar-mode 0)
   (tool-bar-mode 0)
+  (menu-bar-mode 0)
   (fringe-mode 0)
   (add-hook 'after-init-hook 'ibuffer) ; show ibuffer after emacs starts
   ;; (find-file "~/.emacs.d/myconfig/conf.org")    ; load conf.org
@@ -37,8 +38,6 @@
   (setq confirm-kill-emacs 'y-or-n-p)        ; confirmation on exit
   ;; (setq gc-cons-percentage 0.1)
 
-  ;; smaller #+begin_src font in org-mode
-  (set-face-attribute 'org-meta-line nil :height 0.7 :slant 'normal)
 
   ;; scrolling
   (setq scroll-conservatively most-positive-fixnum)           ; removes jumpiness when scrolling
@@ -49,7 +48,9 @@
   (setq auto-window-vscroll nil)
 
   ;; backups
-  (setq backup-directory-alist `(("." . "~/.emacsbak")))
+  (setq backup-directory-alist `(("." . (concat user-emacs-directory "/bak"))))
+  (setq auto-save-file-name-transforms
+          `((".*" "~/.emacs.d/bak/autosaves" t))) ;;asdasds
   (setq delete-old-versions t
     kept-new-versions 6
     kept-old-versions 2
@@ -206,35 +207,18 @@
   (global-set-key (kbd "S-C-<down>")  'shrink-window)
   (global-set-key (kbd "S-C-<up>")    'enlarge-window)
 #+END_SRC
+* Recentf
+#+BEGIN_SRC emacs-lisp :tangle yes
+(require 'recentf)
+(recentf-mode 1)
+(global-set-key (kbd "C-c r") 'recentf-open-files)
+#+END_SRC
 * C mode
 #+BEGIN_SRC emacs-lisp :tangle yes
   (setq c-default-style "java")
 #+END_SRC
 * IBuffer
 #+BEGIN_SRC emacs-lisp :tangle yes
-  ;; (setq ibuffer-default-sorting-mode 'major-mode)
-  ;; (setq ibuffer-saved-filter-groups
-  ;;   '(("default"
-  ;;     ("Dired" (mode . dired-mode))
-  ;;     ("Planner" (or
-  ;;                 (name . "^\\*Calendar\\*$")
-  ;;                 (name . "^diary$")
-  ;;                 (mode . muse-mode)))
-
-  ;;     ("Magit" (name . "^\\magit"))
-
-  ;;     ("Internal" (name . "^\\*.*$"))
-
-  ;; )))
-
-  ;; (setq ibuffer-show-empty-filter-groups nil)
-  ;; (add-hook 'ibuffer-mode-hook
-  ;;           (lambda ()
-  ;;             (ibuffer-projectile-set-filter-groups)
-  ;;             (ibuffer-switch-to-saved-filter-groups "default")))
-  ;; ;; display hydra when loading ibuffer
-  ;; (add-hook 'ibuffer-hook #'hydra-ibuffer-main/body)
-  ;; Define ibuffer filter groups for each known project
   (defun my/define-projectile-filter-groups ()
     (when (boundp 'projectile-known-projects)
       (setq my/project-filter-groups
@@ -257,8 +241,10 @@
                               (name . "^diary$")
                               (mode . muse-mode)))
                   ("Magit" (name . "^\\magit"))
-                  ("Internal" (name . "^\\*.*$"))
-                           )))))
+                  ("Internal" (or 
+                                (name . "^\\*.*$")
+                                (name . "^\\Treemacs.*$")))
+                 )))))
             ;; Enable default groups by default
   (add-hook 'ibuffer-mode-hook
                 (lambda ()
@@ -275,6 +261,19 @@
 * Org
 #+BEGIN_SRC emacs-lisp :tangle yes
   ;; (setq org-src-fontify-natively t)
+
+  ;; smaller #+begin_src font in org-mode
+  (set-face-attribute 'org-meta-line nil :height 0.7 :slant 'normal)
+
+  (setq org-export-coding-system 'utf-8)
+  (setq org-agenda-files (concat org-directory "/agenda.org"))
+
+  (setq org-default-notes-file (concat org-directory "/capture.org"))
+  (setq org-capture-templates
+ '(("t" "Todo" entry (file+headline "~/org/todo.org" "Tasks")
+        "* TODO %?\n  %i\n  %a")
+   ("j" "Journal" entry (file+olp+datetree "~/org/journal.org")
+        "* %?\nEntered on %U\n  %i\n  %a")))
 #+END_SRC
 * Winner mode 
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -291,20 +290,21 @@
     (evil-leader-mode 1)
     (evil-leader/set-leader "<SPC>")
     (evil-leader/set-key
+      "TAB" 'my-alternate-buffer 
       "[" 'winner-undo
       "]" 'winner-redo
       "a" 'align-regexp
       "b" 'ibuffer
+      "c" 'org-capture
       "e" 'helm-flycheck
       "f" 'helm-find-files
       "g" 'google-this
       "h" 'hydra-help/body
       "j" 'ace-jump-mode
-      "k" 'kill-buffer
+      "k" 'kill-this-buffer
       "m" 'magit-status
       "n" 'hydra-navigation/body
       "o" 'other-window
-      "p" 'popwin:close-popup-window
       "t" 'treemacs
       "w" 'delete-window
       "z" '(lambda() (interactive) (find-file "~/.emacs.d/myconfig/conf.org"))))
@@ -370,6 +370,73 @@ Animations for text changes in evil mode.
 ** Evil Org
 #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package org-evil)
+
+  (eval-after-load 'org-agenda
+  '(progn
+    (evil-set-initial-state 'org-agenda-mode 'normal)
+    (evil-define-key 'normal org-agenda-mode-map
+      (kbd "<RET>") 'org-agenda-switch-to
+      (kbd "\t") 'org-agenda-goto
+
+      "q" 'org-agenda-quit
+      "r" 'org-agenda-redo
+      "S" 'org-save-all-org-buffers
+      "gj" 'org-agenda-goto-date
+      "gJ" 'org-agenda-clock-goto
+      "gm" 'org-agenda-bulk-mark
+      "go" 'org-agenda-open-link
+      "s" 'org-agenda-schedule
+      "+" 'org-agenda-priority-up
+      "," 'org-agenda-priority
+      "-" 'org-agenda-priority-down
+      "y" 'org-agenda-todo-yesterday
+      "n" 'org-agenda-add-note
+      "t" 'org-agenda-todo
+      ":" 'org-agenda-set-tags
+      ";" 'org-timer-set-timer
+      "I" 'helm-org-task-file-headings
+      "i" 'org-agenda-clock-in-avy
+      "O" 'org-agenda-clock-out-avy
+      "u" 'org-agenda-bulk-unmark
+      "x" 'org-agenda-exit
+      "j"  'org-agenda-next-line
+      "k"  'org-agenda-previous-line
+      "vt" 'org-agenda-toggle-time-grid
+      "va" 'org-agenda-archives-mode
+      "vw" 'org-agenda-week-view
+      "vl" 'org-agenda-log-mode
+      "vd" 'org-agenda-day-view
+      "vc" 'org-agenda-show-clocking-issues
+      "g/" 'org-agenda-filter-by-tag
+      "o" 'delete-other-windows
+      "gh" 'org-agenda-holiday
+      "gv" 'org-agenda-view-mode-dispatch
+      "f" 'org-agenda-later
+      "b" 'org-agenda-earlier
+      "c" 'helm-org-capture-templates
+      "e" 'org-agenda-set-effort
+      "n" nil  ; evil-search-next
+      "{" 'org-agenda-manipulate-query-add-re
+      "}" 'org-agenda-manipulate-query-subtract-re
+      "A" 'org-agenda-toggle-archive-tag
+      "." 'org-agenda-goto-today
+      "0" 'evil-digit-argument-or-evil-beginning-of-line
+      "<" 'org-agenda-filter-by-category
+      ">" 'org-agenda-date-prompt
+      "F" 'org-agenda-follow-mode
+      "D" 'org-agenda-deadline
+      "H" 'org-agenda-holidays
+      "J" 'org-agenda-next-date-line
+      "K" 'org-agenda-previous-date-line
+      "L" 'org-agenda-recenter
+      "P" 'org-agenda-show-priority
+      "R" 'org-agenda-clockreport-mode
+      "Z" 'org-agenda-sunrise-sunset
+      "T" 'org-agenda-show-tags
+      "X" 'org-agenda-clock-cancel
+      "[" 'org-agenda-manipulate-query-add
+      "g\\" 'org-agenda-filter-by-tag-refine
+      "]" 'org-agenda-manipulate-query-subtract)))
 #+END_SRC
 ** Evil Nerd Commenter #DISABLED
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -520,28 +587,12 @@ Animations for text changes in evil mode.
 #+END_SRC
 * Projectile 
 #+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package projectile
+    (use-package projectile
+    :init
+    (setq projectile-keymap-prefix (kbd "C-c p"))
     :config
     (projectile-mode 1))
-    
-  (use-package ibuffer-projectile
-    :init
-    ;;(add-hook 'ibuffer-hook
-      ;;(lambda ()
-        ;;(ibuffer-projectile-set-filter-groups)
-          ;;(unless (eq ibuffer-sorting-mode 'alphabetic)
-            ;;(ibuffer-do-sort-by-alphabetic))))
-    ;;(setq ibuffer-formats
-          ;;'((mark modified read-only " "
-                  ;;(name 18 18 :left :elide)
-                  ;;" "
-                  ;;(size 9 -1 :right)
-                  ;;" "
-                  ;;(mode 16 16 :left :elide)
-                  ;;" "
-                  ;;project-relative-file)))
-)
-#+END_SRC
+  #+END_SRC
 * Which Key
   #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package which-key
@@ -724,6 +775,17 @@ Animations for text changes in evil mode.
   ;; (smooth-scrolling-mode)
   ;; (setq smooth-scroll-margin 4))
 #+END_SRC
+** Rainbow delimiters
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package rainbow-delimiters
+    :init
+    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+    :config
+    (set-face-attribute 'rainbow-delimiters-mismatched-face nil
+                        :foreground "Red")
+    (set-face-attribute 'rainbow-delimiters-unmatched-face nil
+                        :foreground "Red"))
+#+END_SRC
 ** Olivetti
  Centers the text in the window.
  #+BEGIN_SRC emacs-lisp :tangle yes
@@ -746,6 +808,18 @@ Run sp-cheat-sheet for a list of commands.
     :config
     (smartparens-global-mode 0))
  #+END_SRC
+** Dumb jump
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package dumb-jump)
+  (use-package dumb-jump
+  :bind (("M-g o" . dumb-jump-go-other-window)
+         ("M-g j" . dumb-jump-go)
+         ("M-g i" . dumb-jump-go-prompt)
+         ("M-g x" . dumb-jump-go-prefer-external)
+         ("M-g z" . dumb-jump-go-prefer-external-other-window))
+  :config (setq dumb-jump-selector 'ivy) ;; (setq dumb-jump-selector 'helm)
+  :ensure)
+#+END_SRC
 ** Ace Jump Mode
  #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package ace-jump-mode)
@@ -782,6 +856,7 @@ Run sp-cheat-sheet for a list of commands.
   (use-package pdf-tools
     :config
     (pdf-tools-install))
+  (add-hook 'pdf-view-mode-hook (lambda() (display-line-numbers-mode -1)))
  #+END_SRC
 ** Google this
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -858,6 +933,10 @@ Run sp-cheat-sheet for a list of commands.
 #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package discover-my-major)
 #+END_SRC
+** Paradox # DISABLED
+#+BEGIN_SRC emacs-lisp :tangle yes
+;; (use-package paradox)
+#+END_SRC
 ** Spaceline # DISABLED
 #+BEGIN_SRC emacs-lisp :tangle yes
   ;; (use-package spaceline
@@ -910,6 +989,25 @@ Run sp-cheat-sheet for a list of commands.
    ;; (telephone-line-mode))
  #+END_SRC
 * Defuns
+#+BEGIN_SRC emacs-lisp :tangle yes
+(defun my-alternate-buffer (&optional window)
+  "Switch back and forth between current and last buffer in the
+current window."
+  (interactive)
+  (let ((current-buffer (window-buffer window))
+        (buffer-predicate
+         (frame-parameter (window-frame window) 'buffer-predicate)))
+    ;; switch to first buffer previously shown in this window that matches
+    ;; frame-parameter `buffer-predicate'
+    (switch-to-buffer
+     (or (cl-find-if (lambda (buffer)
+                       (and (not (eq buffer current-buffer))
+                            (or (null buffer-predicate)
+                                (funcall buffer-predicate buffer))))
+                     (mapcar #'car (window-prev-buffers window)))
+         ;; `other-buffer' honors `buffer-predicate' so no need to filter
+         (other-buffer current-buffer t)))))
+#+END_SRC
 * Custom file
 #+BEGIN_SRC emacs-lisp :tangle yes
   (setq custom-file (concat user-emacs-directory "/myconfig/.custom.el"))
