@@ -29,19 +29,24 @@
 #+END_SRC
 * Various options
 #+begin_src emacs-lisp :tangle yes
-  (setq scroll-conservatively 101)           ; removes jumpiness when scrolling
   (setq display-time-default-load-average t) ; display load average in the modeline
   (setq-default indent-tabs-mode nil)        ; spaces instead of tabs
   (setq mode-require-final-newline t)        ; adds \n at the end of file
   (setq mouse-wheel-progressive-speed nil)   ; sane mouse wheel scrolling
-  (setq scroll-margin 4)                     ; scroll before getting to the end of the screen
-  (setq scroll-step 1)
   (fset 'yes-or-no-p 'y-or-n-p)              ; prompt y/n instead of yes/no
   (setq confirm-kill-emacs 'y-or-n-p)        ; confirmation on exit
   ;; (setq gc-cons-percentage 0.1)
 
   ;; smaller #+begin_src font in org-mode
   (set-face-attribute 'org-meta-line nil :height 0.7 :slant 'normal)
+
+  ;; scrolling
+  (setq scroll-conservatively most-positive-fixnum)           ; removes jumpiness when scrolling
+  (setq scroll-margin 4)                     ; scroll before getting to the end of the screen
+  (setq scroll-step 1)
+  (setq redisplay-dont-pause t)
+  (setq scroll-preserve-screen-position 1)
+  (setq auto-window-vscroll nil)
 
   ;; backups
   (setq backup-directory-alist `(("." . "~/.emacsbak")))
@@ -207,27 +212,65 @@
 #+END_SRC
 * IBuffer
 #+BEGIN_SRC emacs-lisp :tangle yes
-  (setq ibuffer-default-sorting-mode 'major-mode)
-  (setq ibuffer-saved-filter-groups
-    '(("default"
-      ("Dired" (mode . dired-mode))
-      ("Planner" (or
-                  (name . "^\\*Calendar\\*$")
-                  (name . "^diary$")
-                  (mode . muse-mode)))
-  
-      ("Magit" (name . "^\\magit"))
-  
-      ("Internal" (name . "^\\*.*$"))
-  
-  )))
-  
-  (setq ibuffer-show-empty-filter-groups nil)
-  (add-hook 'ibuffer-mode-hook
-            (lambda ()
-              (ibuffer-switch-to-saved-filter-groups "default")))
-  ;; display hydra when loading ibuffer
+  ;; (setq ibuffer-default-sorting-mode 'major-mode)
+  ;; (setq ibuffer-saved-filter-groups
+  ;;   '(("default"
+  ;;     ("Dired" (mode . dired-mode))
+  ;;     ("Planner" (or
+  ;;                 (name . "^\\*Calendar\\*$")
+  ;;                 (name . "^diary$")
+  ;;                 (mode . muse-mode)))
+
+  ;;     ("Magit" (name . "^\\magit"))
+
+  ;;     ("Internal" (name . "^\\*.*$"))
+
+  ;; )))
+
+  ;; (setq ibuffer-show-empty-filter-groups nil)
+  ;; (add-hook 'ibuffer-mode-hook
+  ;;           (lambda ()
+  ;;             (ibuffer-projectile-set-filter-groups)
+  ;;             (ibuffer-switch-to-saved-filter-groups "default")))
+  ;; ;; display hydra when loading ibuffer
   ;; (add-hook 'ibuffer-hook #'hydra-ibuffer-main/body)
+  ;; Define ibuffer filter groups for each known project
+  (defun my/define-projectile-filter-groups ()
+    (when (boundp 'projectile-known-projects)
+      (setq my/project-filter-groups
+          (mapcar
+           (lambda (it)
+             (let ((name (file-name-nondirectory (directory-file-name it))))
+               `(,name (filename . ,(expand-file-name it)))))
+           projectile-known-projects))))
+
+  ;; Set up default ibuffer filter groups
+  (setq ibuffer-saved-filter-groups
+        (list
+         (cons "default"
+               (append
+                (my/define-projectile-filter-groups)
+                ;; ... whatever other groups you want, e.g.
+                '(("Dired" (mode . dired-mode))
+                  ("Planner" (or
+                              (name . "^\\*Calendar\\*$")
+                              (name . "^diary$")
+                              (mode . muse-mode)))
+                  ("Magit" (name . "^\\magit"))
+                  ("Internal" (name . "^\\*.*$"))
+                           )))))
+            ;; Enable default groups by default
+  (add-hook 'ibuffer-mode-hook
+                (lambda ()
+                  (ibuffer-switch-to-saved-filter-groups "default")))
+
+  ;; You probably don't want to see empty project groups
+  (setq ibuffer-show-empty-filter-groups nil)
+#+END_SRC
+* Dired
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (require 'dired+)
+  (diredp-toggle-find-file-reuse-dir 1)
 #+END_SRC
 * Org
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -248,22 +291,22 @@
     (evil-leader-mode 1)
     (evil-leader/set-leader "<SPC>")
     (evil-leader/set-key
-      "a" 'org-agenda
-      "b" 'ibuffer
-      "k" 'kill-buffer
-      "f" 'helm-find-files
-      "h" 'hydra-help/body
-      "p" 'popwin:close-popup-window
       "[" 'winner-undo
       "]" 'winner-redo
-      "n" 'hydra-navigation/body
-      "w" 'delete-window
-      "o" 'other-window
       "a" 'align-regexp
-      "j" 'ace-jump-mode
+      "b" 'ibuffer
       "e" 'helm-flycheck
+      "f" 'helm-find-files
       "g" 'google-this
+      "h" 'hydra-help/body
+      "j" 'ace-jump-mode
+      "k" 'kill-buffer
       "m" 'magit-status
+      "n" 'hydra-navigation/body
+      "o" 'other-window
+      "p" 'popwin:close-popup-window
+      "t" 'treemacs
+      "w" 'delete-window
       "z" '(lambda() (interactive) (find-file "~/.emacs.d/myconfig/conf.org"))))
 #+END_SRC
 ** Evil
@@ -475,11 +518,29 @@ Animations for text changes in evil mode.
     ("k" git-gutter:previous-hunk)
     ("SPC" nil "exit"))
 #+END_SRC
-* Git gutter
+* Projectile 
 #+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package git-gutter
+  (use-package projectile
+    :config
+    (projectile-mode 1))
+    
+  (use-package ibuffer-projectile
     :init
-    (global-git-gutter-mode))
+    ;;(add-hook 'ibuffer-hook
+      ;;(lambda ()
+        ;;(ibuffer-projectile-set-filter-groups)
+          ;;(unless (eq ibuffer-sorting-mode 'alphabetic)
+            ;;(ibuffer-do-sort-by-alphabetic))))
+    ;;(setq ibuffer-formats
+          ;;'((mark modified read-only " "
+                  ;;(name 18 18 :left :elide)
+                  ;;" "
+                  ;;(size 9 -1 :right)
+                  ;;" "
+                  ;;(mode 16 16 :left :elide)
+                  ;;" "
+                  ;;project-relative-file)))
+)
 #+END_SRC
 * Which Key
   #+BEGIN_SRC emacs-lisp :tangle yes
@@ -525,6 +586,10 @@ Animations for text changes in evil mode.
        (define-key company-mode-map (kbd "C-:") 'helm-company)
        (define-key company-active-map (kbd "C-:") 'helm-company)))
   (add-to-list 'company-backends 'company-math-symbols-unicode)
+  
+  (use-package helm-projectile
+    :config
+    (helm-projectile-on))
 #+END_SRC
 * Flycheck
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -548,56 +613,7 @@ Animations for text changes in evil mode.
 #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package magit)
 #+END_SRC
-* =========================
-* Various packages
-** help-fns+
- #+BEGIN_SRC emacs-lisp :tangle yes
-  (require 'help-fns+)
- #+END_SRC
-** Smooth scrolling
-#+BEGIN_SRC emacs-lisp :tangle yes
-;; (use-package smooth-scrolling
-  ;; :config
-  ;; (smooth-scrolling-mode)
-  ;; (setq smooth-scroll-margin 4))
-#+END_SRC
-** Olivetti
- Centers the text in the window.
- #+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package olivetti
-    :config
-    (setq olivetti-body-width 120)
-    (global-set-key (kbd "C-c o") 'olivetti-mode))
- #+END_SRC
-** Org bullets
- #+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package org-bullets
-      :hook (org-mode . org-bullets-mode))
-   #+END_SRC
-** Smartparens
-Run sp-cheat-sheet for a list of commands.
- #+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package smartparens
-    :init
-    (require 'smartparens-config)
-    :config
-    (smartparens-global-mode 0))
- #+END_SRC
-** Ace Jump Mode
- #+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package ace-jump-mode)
- #+END_SRC
-** Try
- #+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package try)
- #+END_SRC
-** Highlight indent guides
-#+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package highlight-indent-guides
-    :config
-    (add-hook 'prog-mode-hook 'highlight-indent-guides))
-#+END_SRC
-** Shackle 
+* Shackle 
 #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package shackle)
   (shackle-mode t)
@@ -606,12 +622,12 @@ Run sp-cheat-sheet for a list of commands.
         '(("*helm-ag*"              :select t   :align right :size 0.5)
           ("*helm semantic/imenu*"  :select t   :align right :size 0.4)
           ("*helm org inbuffer*"    :select t   :align right :size 0.4)
-          (flycheck-error-list-mode :select nil :align below :size 0.25)
-          (compilation-mode         :select nil :align below :size 0.25)
-          (messages-buffer-mode     :select t   :align below :size 0.25)
-          (inferior-emacs-lisp-mode :select t   :align below :size 0.25)
+          (flycheck-error-list-mode :select nil :align below :size 0.4)
+          (compilation-mode         :select t   :align below :size 0.5)
+          (messages-buffer-mode     :select t   :align below :size 0.3)
+          (inferior-emacs-lisp-mode :select t   :align below :size 0.3)
           (ert-results-mode         :select t   :align below :size 0.5)
-          (calendar-mode            :select t   :align below :size 0.25)
+          (calendar-mode            :select t   :align below :size 0.3)
           (racer-help-mode          :select t   :align right :size 0.5)
           (help-mode                :select t   :align below :size 0.5)
           (helpful-mode             :select t   :align below :size 0.5)
@@ -620,17 +636,17 @@ Run sp-cheat-sheet for a list of commands.
           (magit-revision-mode      :select t   :align right :size 0.7)
           ("*Warnings*"             :select t   :align below :size 0.5)
           ("*Compile-Log*"          :select t   :align below :size 0.5)
-          (" *Deletions*"           :select t   :align below :size 0.25)
-          (" *Marked Files*"        :select t   :align below :size 0.25)
-          ("*Org Select*"           :select t   :align below :size 0.33)
-          ("*Org Note*"             :select t   :align below :size 0.33)
+          (" *Deletions*"           :select t   :align below :size 0.3)
+          (" *Marked Files*"        :select t   :align below :size 0.3)
+          ("*Org Select*"           :select t   :align below :size 0.3)
+          ("*Org Note*"             :select t   :align below :size 0.3)
           ("*Org Links*"            :select t   :align below :size 0.2)
           (" *Org todo*"            :select t   :align below :size 0.2)
-          ("*Man.*"                 :select t   :align below :size 0.5  :regexp t)
-          ("*helm.*"                :select t   :align below :size 0.45 :regexp t)
-          ("*Org Src.*"             :select t   :align right :size 0.5  :regexp t)))
+          ("*Man.*"                 :select t   :align right :size 0.55 :regexp t)
+          ("*helm.*"                :select t   :align below :size 0.5  :regexp t)
+          ("*Org Src.*"             :select t   :align right :size 0.8  :regexp t)))
   #+END_SRC
-*** Rules
+** Rules
 ;; Elements of the `shackle-rules' alist:
 ;;
 ;; |-----------+------------------------+--------------------------------------------------|
@@ -695,6 +711,56 @@ Run sp-cheat-sheet for a list of commands.
 ;; |-----------+------------------------+--------------------------------------------------|
 ;; |           | :frame t               | Pop buffer to a frame instead of a window.       |
 ;; |-----------+------------------------+--------------------------------------------------|
+* =========================
+* Various packages
+** help-fns+
+ #+BEGIN_SRC emacs-lisp :tangle yes
+  (require 'help-fns+)
+ #+END_SRC
+** Smooth scrolling
+#+BEGIN_SRC emacs-lisp :tangle yes
+;; (use-package smooth-scrolling
+  ;; :config
+  ;; (smooth-scrolling-mode)
+  ;; (setq smooth-scroll-margin 4))
+#+END_SRC
+** Olivetti
+ Centers the text in the window.
+ #+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package olivetti
+    :config
+    (setq olivetti-body-width 120)
+    (global-set-key (kbd "C-c o") 'olivetti-mode))
+ #+END_SRC
+** Org bullets
+ #+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package org-bullets
+      :hook (org-mode . org-bullets-mode))
+   #+END_SRC
+** Smartparens
+Run sp-cheat-sheet for a list of commands.
+ #+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package smartparens
+    :init
+    (require 'smartparens-config)
+    :config
+    (smartparens-global-mode 0))
+ #+END_SRC
+** Ace Jump Mode
+ #+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package ace-jump-mode)
+ #+END_SRC
+** Try
+ #+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package try)
+ #+END_SRC
+** Highlight indent guides
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package highlight-indent-guides
+    :init
+    (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
+    (setq highlight-indent-guides-method 'character))
+#+END_SRC
 ** Expand region
  #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package expand-region
@@ -705,6 +771,12 @@ Run sp-cheat-sheet for a list of commands.
 #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package man)
 #+END_SRC
+** Git gutter
+ #+BEGIN_SRC emacs-lisp :tangle yes
+   (use-package git-gutter
+     :init
+     (global-git-gutter-mode))
+ #+END_SRC
 ** Pdf Tools
  #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package pdf-tools
@@ -714,6 +786,73 @@ Run sp-cheat-sheet for a list of commands.
 ** Google this
 #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package google-this)
+#+END_SRC
+** Treemacs 
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package treemacs
+    :init
+    (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+    :config
+    (progn
+      (setq treemacs-collapse-dirs              (if (executable-find "python") 3 0)
+            treemacs-deferred-git-apply-delay   0.5
+            treemacs-display-in-side-window     t
+            treemacs-file-event-delay           5000
+            treemacs-file-follow-delay          0.2
+            treemacs-follow-after-init          t
+            treemacs-follow-recenter-distance   0.1
+            treemacs-git-command-pipe           ""
+            treemacs-goto-tag-strategy          'refetch-index
+            treemacs-indentation                2
+            treemacs-indentation-string         " "
+            treemacs-is-never-other-window      nil
+            treemacs-max-git-entries            5000
+            treemacs-no-png-images              nil
+            treemacs-no-delete-other-windows    t
+            treemacs-project-follow-cleanup     nil
+            treemacs-persist-file               (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+            treemacs-recenter-after-file-follow nil
+            treemacs-recenter-after-tag-follow  nil
+            treemacs-show-cursor                nil
+            treemacs-show-hidden-files          t
+            treemacs-silent-filewatch           nil
+            treemacs-silent-refresh             nil
+            treemacs-sorting                    'alphabetic-desc
+            treemacs-space-between-root-nodes   t
+            treemacs-tag-follow-cleanup         t
+            treemacs-tag-follow-delay           1.5
+            treemacs-width                      35)
+  
+      ;; The default width and height of the icons is 22 pixels. If you are
+      ;; using a Hi-DPI display, uncomment this to double the icon size.
+      ;;(treemacs-resize-icons 44)
+  
+      (treemacs-follow-mode t)
+      (treemacs-filewatch-mode t)
+      (treemacs-fringe-indicator-mode t)
+      (pcase (cons (not (null (executable-find "git")))
+                   (not (null (executable-find "python3"))))
+        (`(t . t)
+         (treemacs-git-mode 'deferred))
+        (`(t . _)
+         (treemacs-git-mode 'simple))))
+    :bind
+    (:map global-map
+          ("M-0"       . treemacs-select-window)
+          ("C-x t 1"   . treemacs-delete-other-windows)
+          ("C-x t t"   . treemacs)
+          ("C-x t B"   . treemacs-bookmark)
+          ("C-x t C-t" . treemacs-find-file)
+          ("C-x t M-t" . treemacs-find-tag))) 
+
+  (use-package treemacs-evil
+    :after treemacs evil
+    :ensure t)
+  
+  (use-package treemacs-projectile
+    :after treemacs projectile
+    :ensure t)
 #+END_SRC
 ** Discover my major
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -779,4 +918,5 @@ Run sp-cheat-sheet for a list of commands.
 #+END_SRC
 * Checkout
 https://github.com/bmag/emacs-purpose
+
 
