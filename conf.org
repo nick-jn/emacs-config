@@ -83,7 +83,7 @@
 * Word wrapping
 #+BEGIN_SRC emacs-lisp :tangle yes
   (setq fill-column 79)
-  ;; (require 'fill-column-indicator)
+  (require 'fill-column-indicator)
   ;; (fci-mode 1)
   ;; (global-visual-fill-column-mode 1)
   ;; (global-visual-line-mode 1)
@@ -271,9 +271,9 @@
   (setq org-default-notes-file (concat org-directory "/capture.org"))
   (setq org-capture-templates
  '(("t" "Todo" entry (file+headline "~/org/todo.org" "Tasks")
-        "* TODO %?\n  %i\n  %a")
+        "* TODO %?\n  %i\n")
    ("j" "Journal" entry (file+olp+datetree "~/org/journal.org")
-        "* %?\nEntered on %U\n  %i\n  %a")))
+        "* %?\nEntered on %U\n  %i\n")))
 #+END_SRC
 * Winner mode 
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -651,6 +651,8 @@ Animations for text changes in evil mode.
     (setq flycheck-pos-tip-mode t)
     (with-eval-after-load 'flycheck
       (flycheck-pos-tip-mode))) ; show tooltip when point is on the error
+  
+  (use-package flycheck-inline)
 #+END_SRC
 * YASnippet
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -929,6 +931,10 @@ Run sp-cheat-sheet for a list of commands.
     :after treemacs projectile
     :ensure t)
 #+END_SRC
+** Centered cursor
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package centered-cursor-mode)
+#+END_SRC
 ** Discover my major
 #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package discover-my-major)
@@ -1016,5 +1022,6 @@ current window."
 #+END_SRC
 * Checkout
 https://github.com/bmag/emacs-purpose
-
-
+* Ideas
+Project-specific hydras (compilation, build options).
+Make a generic compilation hydra (run make, for example).
