@@ -33,6 +33,7 @@
 #+begin_src emacs-lisp :tangle yes
   (setq display-time-default-load-average t) ; display load average in the modeline
   (setq-default indent-tabs-mode nil)        ; spaces instead of tabs
+  (setq-default tab-width 4)
   (setq mode-require-final-newline t)        ; adds \n at the end of file
   (setq mouse-wheel-progressive-speed nil)   ; sane mouse wheel scrolling
   (fset 'yes-or-no-p 'y-or-n-p)              ; prompt y/n instead of yes/no
@@ -96,21 +97,40 @@
   ;; (setq electric-pair-preserve-balance nil) ; Auto-complete brackets, etc.
   ;; (electric-pair-mode t)
   (show-paren-mode 1) ; highlight paired parens
+  (setq show-paren-delay 0)
+  (setq blink-matching-paren 0)
+  (setq show-paren-style 'parenthesis)
+
+  ;; (set-face-background 'show-paren-match "Green")
+  ;; (set-face-foreground 'show-paren-match "Firebrick")
+  ;; (set-face-attribute 'show-paren-match nil :weight 'ultra-bold)
+ 
+  ;; (set-face-background 'show-paren-mismatch "Blue")
+  ;; (set-face-foreground 'show-paren-mismatch "White")
+  ;; (set-face-attribute 'show-paren-mismatch nil :weight 'extra-bold)
+  
+  (make-face 'show-paren-match-face)
+  (make-face 'show-paren-mismatch-face)
+  (set-face-background 'show-paren-match-face "blue")
+  (set-face-foreground 'show-paren-match-face "white")
+  (set-face-background 'show-paren-mismatch-face "magenta")
+  (set-face-foreground 'show-paren-mismatch-face "yellow")
 #+END_SRC
 * Cursor, hl-line
 #+BEGIN_SRC emacs-lisp :tangle yes
   (blink-cursor-mode 0)
-  (global-hl-line-mode 1)
   (set-cursor-color "firebrick")
+
+  (global-hl-line-mode 1)
   (set-face-background 'hl-line "gainsboro")
   (set-face-foreground 'highlight nil)
-  (setq size-indication-mode t)
 #+END_SRC
 * Modeline
 #+BEGIN_SRC emacs-lisp :tangle yes
   (display-time-mode 1)
   (setq display-time-24hr-format t)
   (setq column-number-mode t)
+  (setq size-indication-mode t)
   (setq line-number-mode t)
   (set-face-foreground 'mode-line "white smoke")
   (set-face-background 'mode-line "navy")
@@ -190,7 +210,6 @@
   (global-set-key (kbd "C-c n") 'next-buffer)
   (global-set-key (kbd "C-c v") 'set-variable)
   
-  (global-set-key (kbd "<f1>")     'describe-key)
   (global-set-key (kbd "C-c <f1>") 'which-key-show-major-mode)
   (global-set-key (kbd "<f2>")     'other-window)
   (global-set-key (kbd "<f3>")     'delete-other-windows)
@@ -208,6 +227,9 @@
   (global-set-key (kbd "S-C-<right>") 'enlarge-window-horizontally)
   (global-set-key (kbd "S-C-<down>")  'shrink-window)
   (global-set-key (kbd "S-C-<up>")    'enlarge-window)
+  
+  (global-set-key (kbd "<f1>")  'helpful-key)
+  (global-set-key (kbd "C-h v") 'helpful-variable)
 #+END_SRC
 * Recentf
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -264,6 +286,7 @@
 * Org
 #+BEGIN_SRC emacs-lisp :tangle yes
   ;; (setq org-src-fontify-natively t)
+  (setq org-startup-indented t)
 
   ;; smaller #+begin_src font in org-mode
   (set-face-attribute 'org-meta-line nil :height 0.7 :slant 'normal)
@@ -277,11 +300,19 @@
         "* TODO %?\n  %i\n")
    ("j" "Journal" entry (file+olp+datetree "~/org/journal.org")
         "* %?\nEntered on %U\n  %i\n")))
+
+  (defadvice org-insert-heading-respect-content
+    (after advice-for-org-insert-heading-respect-content activate)
+    (evil-append 1))
+
+  (defadvice org-insert-todo-heading-respect-content
+    (after advice-for-org-insert-todo-heading-respect-content activate)
+    (evil-append 1))
 #+END_SRC
 * Winner mode 
 #+BEGIN_SRC emacs-lisp :tangle yes
   (winner-mode)
-  #+END_SRC
+#+END_SRC
 * =========================
 * Evil
 ** Evil Leader
@@ -308,6 +339,8 @@
       "m" 'magit-status
       "n" 'hydra-navigation/body
       "o" 'other-window
+      "p" 'helm-projectile
+      "r" 'browse-kill-ring
       "q" 'my-open-org-dir-helm
       "t" 'treemacs
       "w" 'delete-window
@@ -327,11 +360,14 @@
     (evil-set-initial-state 'term-mode 'emacs)
     (evil-set-initial-state 'ansi-term-mode 'emacs)
     (evil-set-initial-state 'Custom-mode 'emacs)
-  
-    (setq evil-respect-visual-line-mode t)
+ 
+    ;; Various qol changes
+    ;; (define-key evil-insert-state-map (kbd "RET") 'newline-and-indent)
     (define-key evil-normal-state-map "U" 'undo-tree-redo)
-    (define-key evil-normal-state-map "\C-u" 'evil-scroll-up) ; C-u scrolls up now
+    (define-key evil-normal-state-map "\C-u" 'evil-scroll-up)
+
     ;; Make evil-mode up/down operate in screen lines instead of logical line
+    (setq evil-respect-visual-line-mode t)
     (define-key evil-motion-state-map "j" 'evil-next-visual-line)
     (define-key evil-motion-state-map "k" 'evil-previous-visual-line)
     ;; Also in visual mode
@@ -482,11 +518,12 @@ Animations for text changes in evil mode.
 #+BEGIN_SRC emacs-lisp :tangle yes
   (defhydra hydra-help ()
     "help"
+    ("b" helm-descbinds "helm-descbinds" :exit t)
     ("e" helm-info-emacs "helm-info-emacs" :exit t)
     ("h" helpful-at-point "helpful-at-point" :exit t)
-    ("b" helm-descbinds "helm-descbinds" :exit t)
+    ("k" describe-keymap "describe keymap" :exit t)
     ("m" helm-describe-modes "helm-describe-modes" :exit t)
-    ("v" describe-variable "describe variable" :exit t))
+    ("v" helpful-variable "describe variable" :exit t))
 #+END_SRC
 ** ibuffer
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -802,17 +839,18 @@ Animations for text changes in evil mode.
         '(("*helm-ag*"              :select t   :align right :size 0.5)
           ("*helm semantic/imenu*"  :select t   :align right :size 0.4)
           ("*helm org inbuffer*"    :select t   :align right :size 0.4)
-          (flycheck-error-list-mode :select nil :align below :size 0.4)
+          (flycheck-error-list-mode :select t   :align below :size 0.4)
           (compilation-mode         :select t   :align below :size 0.5)
           (messages-buffer-mode     :select t   :align below :size 0.3)
           (inferior-emacs-lisp-mode :select t   :align below :size 0.3)
           (ert-results-mode         :select t   :align below :size 0.5)
           (calendar-mode            :select t   :align below :size 0.3)
           (racer-help-mode          :select t   :align right :size 0.5)
-          (help-mode                :select t   :align below :size 0.5)
-          (helpful-mode             :select t   :align below :size 0.5)
+          (help-mode                :select t   :align right :size 0.4)
+          (helpful-mode             :select t   :align right :size 0.5)
           (magit-log-mode           :select t   :align right :size 0.5)
-          (magit-diff-mode          :select t   :align right :size 0.7)
+          (magit-diff-mode          :select t   :align right :size 0.5)
+          (magit-status-mode        :select t   :align below :size 0.5)
           (magit-revision-mode      :select t   :align right :size 0.7)
           ("*Warnings*"             :select t   :align below :size 0.5)
           ("*Compile-Log*"          :select t   :align below :size 0.5)
@@ -904,16 +942,30 @@ Animations for text changes in evil mode.
   ;; (smooth-scrolling-mode)
   ;; (setq smooth-scroll-margin 4))
 #+END_SRC
+** Eyebrowse
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package eyebrowse
+  :config
+  (eyebrowse-mode t))
+#+END_SRC
 ** Rainbow delimiters
 #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package rainbow-delimiters
-    :init
-    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
     :config
-    (set-face-attribute 'rainbow-delimiters-mismatched-face nil
-                        :foreground "Red")
-    (set-face-attribute 'rainbow-delimiters-unmatched-face nil
-                        :foreground "Red"))
+    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+    (add-hook 'org-mode-hook #'rainbow-delimiters-mode))
+  #+END_SRC
+** Browse kill ring
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package browse-kill-ring)
+#+END_SRC
+** Crux
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package crux)
+#+END_SRC
+** Visual regexp
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package visual-regexp)
 #+END_SRC
 ** Olivetti
  Centers the text in the window.
@@ -931,9 +983,12 @@ Animations for text changes in evil mode.
 ** Smartparens
 Run sp-cheat-sheet for a list of commands.
  #+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package evil-smartparens)
+
   (use-package smartparens
     :init
     (require 'smartparens-config)
+    (add-hook 'smartparens-enabled-hook #'evil-smartparens-mode)
     :config
     (smartparens-global-mode 0))
  #+END_SRC
@@ -1157,7 +1212,7 @@ current window."
 #+BEGIN_SRC emacs-lisp :tangle yes
   (setq custom-file (concat user-emacs-directory "/myconfig/.custom.el"))
   (load custom-file 'noerror)
-  ;; (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
+  (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
 #+END_SRC
 * Checkout
 https://github.com/bmag/emacs-purpose
