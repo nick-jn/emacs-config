@@ -34,6 +34,7 @@
   (setq display-time-default-load-average t) ; display load average in the modeline
   (setq-default indent-tabs-mode nil)        ; spaces instead of tabs
   (setq-default tab-width 4)
+  (electric-pair-mode 1)
   (setq mode-require-final-newline t)        ; adds \n at the end of file
   (setq mouse-wheel-progressive-speed nil)   ; sane mouse wheel scrolling
   (fset 'yes-or-no-p 'y-or-n-p)              ; prompt y/n instead of yes/no
@@ -74,6 +75,12 @@
   (defadvice ansi-term (before force-bash)
     (interactive (list my-term-shell)))
   (ad-activate 'ansi-term)
+  (add-hook 'eshell-mode-hook (lambda ()
+                                    (setq-local global-hl-line-mode
+                                                nil)))
+  (add-hook 'term-mode-hook (lambda ()
+                                    (setq-local global-hl-line-mode
+                                                nil)))
 #+END_SRC
 * Line numbers
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -173,9 +180,11 @@
   
       ;; version control
       '(vc-mode (" | " (:eval (substring vc-mode 1))))
-      " | %p of %I | " ;; size
-  
-      ;; current column
+      
+      ;; size
+      " | %p of %I | "
+      
+      ;; column and line numbers
       "%02c %l"
   
       ;; flycheck
@@ -193,7 +202,10 @@
                               lighter
                               'face `(:foreground ,(cdr state))))
               " ")))
-  
+
+      ;; eyebrowse
+      '(:eval (concat " | " (eyebrowse-mode-line-indicator)))
+
       ;; right align
       ;; ===========
       (mode-line-fill 'mode-line 6)
@@ -205,7 +217,7 @@
 * Keyboard shortcuts
 #+BEGIN_SRC emacs-lisp :tangle yes
   (global-set-key (kbd "C-c e") (lambda() (interactive) (load-file user-init-file)))
-  (global-set-key (kbd "<f5>")  'eshell)
+  ;; (global-set-key (kbd "<f5>")  'eshell)
   (global-set-key (kbd "C-c b") 'previous-buffer)
   (global-set-key (kbd "C-c n") 'next-buffer)
   (global-set-key (kbd "C-c v") 'set-variable)
@@ -330,10 +342,12 @@
       "a" 'align-regexp
       "b" 'ibuffer
       "c" 'org-capture
+      "d" 'smart-compile
       "e" 'helm-flycheck
       "f" 'helm-find-files
       "g" 'google-this
       "h" 'hydra-help/body
+      "i" 'helm-semantic-or-imenu
       "j" 'ace-jump-mode
       "k" 'kill-this-buffer
       "m" 'magit-status
@@ -341,8 +355,11 @@
       "o" 'other-window
       "p" 'helm-projectile
       "r" 'browse-kill-ring
+      "s" 'save-buffer
+      "u" 'helm-mini
       "q" 'my-open-org-dir-helm
-      "t" 'treemacs
+      "t" 'shell-pop
+      "v" 'hydra-eyebrowse/body
       "w" 'delete-window
       "z" '(lambda() (interactive) (find-file "~/.emacs.d/myconfig/conf.org"))))
 #+END_SRC
@@ -360,11 +377,14 @@
     (evil-set-initial-state 'term-mode 'emacs)
     (evil-set-initial-state 'ansi-term-mode 'emacs)
     (evil-set-initial-state 'Custom-mode 'emacs)
- 
+
     ;; Various qol changes
     ;; (define-key evil-insert-state-map (kbd "RET") 'newline-and-indent)
     (define-key evil-normal-state-map "U" 'undo-tree-redo)
     (define-key evil-normal-state-map "\C-u" 'evil-scroll-up)
+
+    (define-key evil-insert-state-map (kbd "C-j") 'evil-next-visual-line)
+    (define-key evil-insert-state-map (kbd "C-k") 'evil-previous-visual-line)
 
     ;; Make evil-mode up/down operate in screen lines instead of logical line
     (setq evil-respect-visual-line-mode t)
@@ -373,6 +393,9 @@
     ;; Also in visual mode
     (define-key evil-visual-state-map "j" 'evil-next-visual-line)
     (define-key evil-visual-state-map "k" 'evil-previous-visual-line))
+
+
+
   ;; center screen while searching
   (defadvice evil-search-next
     (after advice-for-evil-search-next activate)
@@ -749,6 +772,18 @@ Animations for text changes in evil mode.
     ("." org-agenda-goto-today)
     ("gr" org-agenda-redo))
 #+END_SRC
+** Eyebrowse
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (defhydra hydra-eyebrowse ()
+    "eyebrowse"
+    ("l" eyebrowse-last-window-config "last")
+    ("k" eyebrowse-prev-window-config "prev")
+    ("j" eyebrowse-next-window-config "next")
+    ("r" eyebrowse-rename-window-config "rename")
+    ("d" eyebrowse-close-window-config "close")
+    ("n" eyebrowse-create-window-config "create")
+    ("SPC" nil "exit"))
+#+END_SRC
 * Projectile 
 #+BEGIN_SRC emacs-lisp :tangle yes
     (use-package projectile
@@ -787,6 +822,10 @@ Animations for text changes in evil mode.
     (setq helm-mode-fuzzy-match t)
     (global-set-key (kbd "M-x") 'helm-M-x)
     (setq helm-autoresize-mode t))
+    
+(with-eval-after-load 'helm-buffers
+  (add-to-list 'helm-boring-buffer-regexp-list "\\`#")
+  (add-to-list 'helm-boring-buffer-regexp-list "^\*."))
 
   (use-package helm-descbinds
     :config
@@ -816,7 +855,9 @@ Animations for text changes in evil mode.
     (with-eval-after-load 'flycheck
       (flycheck-pos-tip-mode))) ; show tooltip when point is on the error
   
-  (use-package flycheck-inline)
+  (use-package flycheck-inline
+    :config
+    (global-flycheck-inline-mode))
 #+END_SRC
 * YASnippet
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -846,7 +887,7 @@ Animations for text changes in evil mode.
           (ert-results-mode         :select t   :align below :size 0.5)
           (calendar-mode            :select t   :align below :size 0.3)
           (racer-help-mode          :select t   :align right :size 0.5)
-          (help-mode                :select t   :align right :size 0.4)
+          (help-mode                :select t   :align right :size 0.5)
           (helpful-mode             :select t   :align right :size 0.5)
           (magit-log-mode           :select t   :align right :size 0.5)
           (magit-diff-mode          :select t   :align right :size 0.5)
@@ -862,7 +903,7 @@ Animations for text changes in evil mode.
           (" *Org todo*"            :select t   :align below :size 0.2)
           ("*Man.*"                 :select t   :align right :size 0.55 :regexp t)
           ("*helm.*"                :select t   :align below :size 0.5  :regexp t)
-          ("*Org Src.*"             :select t   :align right :size 0.8  :regexp t)))
+          (" *Org Src.*"             :select t   :align right :size 0.8  :regexp t)))
   #+END_SRC
 ** Rules
 ;; Elements of the `shackle-rules' alist:
@@ -942,10 +983,29 @@ Animations for text changes in evil mode.
   ;; (smooth-scrolling-mode)
   ;; (setq smooth-scroll-margin 4))
 #+END_SRC
+** Shell pop
+#+BEGIN_SRC emacs-lisp :tangle yes
+    (use-package shell-pop
+      :bind (("<f5>" . shell-pop))
+      :config
+      (setq shell-pop-shell-type (quote ("ansi-term" "*ansi-term*" (lambda nil (ansi-term shell-pop-term-shell)))))
+      (setq shell-pop-term-shell "/bin/bash")
+      (setq shell-pop-window-position "right")
+      (setq shell-pop-window-size 50)
+      ;; need to do this manually or not picked up by `shell-pop'
+      (shell-pop--set-shell-type 'shell-pop-shell-type shell-pop-shell-type))
+#+END_SRC
+** Smart compile
+#+BEGIN_SRC emacs-lisp :tangle yes
+(use-package smart-compile)
+#+END_SRC
 ** Eyebrowse
 #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package eyebrowse
   :config
+  (setq eyebrowse-wrap-around t)
+  (setq eyebrowse-mode-line-style 'always)
+  (setq eyebrowse-new-workspace t)
   (eyebrowse-mode t))
 #+END_SRC
 ** Rainbow delimiters
@@ -1210,6 +1270,25 @@ current window."
 #+END_SRC
 * Custom file
 #+BEGIN_SRC emacs-lisp :tangle yes
+;; (use-package irony)
+;; (add-hook 'c++-mode-hook 'irony-mode)
+;; (add-hook 'c-mode-hook 'irony-mode)
+;; (add-hook 'objc-mode-hook 'irony-mode)
+;; (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+;; 
+;; (use-package company-irony)
+;; (eval-after-load 'company
+ ;; '(add-to-list 'company-backends 'company-irony))
+;; 
+;; (use-package flycheck-irony)
+;; (global-flycheck-mode)
+;; (eval-after-load 'flycheck
+  ;; '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
+;; 
+;; 
+;; (add-to-list 'company-backends 'company-irony-c-headers)
+
+
   (setq custom-file (concat user-emacs-directory "/myconfig/.custom.el"))
   (load custom-file 'noerror)
   (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
