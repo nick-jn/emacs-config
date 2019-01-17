@@ -25,7 +25,7 @@
   (tool-bar-mode 0)
   (menu-bar-mode 0)
   (fringe-mode 0)
-  (set-default-font "Hack 13")
+  (set-default-font "Hack 11")
   (add-hook 'after-init-hook 'ibuffer) ; show ibuffer after emacs starts
   ;; (find-file "~/.emacs.d/myconfig/conf.org")    ; load conf.org
 #+END_SRC
@@ -377,6 +377,7 @@
     (evil-set-initial-state 'term-mode 'emacs)
     (evil-set-initial-state 'ansi-term-mode 'emacs)
     (evil-set-initial-state 'Custom-mode 'emacs)
+    (add-hook 'nav-mode-hook 'disable-evil-mode)
 
     ;; Various qol changes
     ;; (define-key evil-insert-state-map (kbd "RET") 'newline-and-indent)
@@ -505,8 +506,8 @@ Animations for text changes in evil mode.
 #+BEGIN_SRC emacs-lisp :tangle yes
 (use-package evil-numbers
   :init
-  (define-key evil-normal-state-map (kbd "C-z") 'evil-numbers/inc-at-pt)
-  (define-key evil-normal-state-map (kbd "C-a") 'evil-numbers/dec-at-pt))
+  (define-key evil-normal-state-map (kbd "C-a") 'evil-numbers/inc-at-pt)
+  (define-key evil-normal-state-map (kbd "C-z") 'evil-numbers/dec-at-pt))
 #+END_SRC
 ** Evil Nerd Commenter #DISABLED
 #+BEGIN_SRC emacs-lisp :tangle yes
